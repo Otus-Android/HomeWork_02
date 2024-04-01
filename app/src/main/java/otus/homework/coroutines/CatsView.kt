@@ -21,12 +21,10 @@ class CatsView @JvmOverloads constructor(
         super.onFinishInflate()
         findViewById<Button>(R.id.button).setOnClickListener {
             viewModel?.apply {
-                getCatImage()
-                getCatFact()
+                getCatData()
             }
             presenter?.apply {
-                getCatImage()
-                getCatFact()
+                getCatData()
             }
         }
     }

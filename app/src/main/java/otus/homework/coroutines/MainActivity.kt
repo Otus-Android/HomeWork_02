@@ -28,19 +28,15 @@ class MainActivity : AppCompatActivity() {
         viewModel = CatsViewModel(diContainer.service, diContainer.image)
         view.viewModel = viewModel
         lifecycleScope.launch(Dispatchers.Main) {
-            viewModel.catFact.collectLatest { result ->
-                when (result) {
-                    is Result.Success -> view.populateFact(result.data)
-                    is Result.Error -> Toast.makeText(this@MainActivity, result.errorMessage, Toast.LENGTH_SHORT).show()
-                    else -> {}
-                }
-            }
-        }
-        lifecycleScope.launch(Dispatchers.Main) {
-            viewModel.catImage.collectLatest { result ->
+            viewModel.catData.collectLatest { result ->
                 when (result) {
                     is Result.Success -> {
-                        view.populateImage(result.data.url)
+                        result.data.apply {
+                            view.populateFact(fact)
+                            image?.url?.let {
+                                view.populateImage(it)
+                            }
+                        }
                     }
                     is Result.Error -> Toast.makeText(this@MainActivity, result.errorMessage, Toast.LENGTH_SHORT).show()
                     else -> {}

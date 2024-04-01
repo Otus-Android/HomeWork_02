@@ -3,6 +3,7 @@ package otus.homework.coroutines
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import otus.homework.coroutines.utils.Result
@@ -17,20 +18,21 @@ class CatsPresenter(
 
     private var _catsView: ICatsView? = null
     private val presenterScope = CoroutineScope(Dispatchers.Main + CoroutineName("CatsCoroutine"))
-    fun getCatFact() {
+    fun getCatData() {
         presenterScope.launch {
             runCatching {
-                _catsView?.populateFact(catsService.getCatFact())
-            }.onFailure { throwable ->
-                CrashMonitor.trackWarning()
-            }
-        }
-
-    }
-    fun getCatImage() {
-        presenterScope.launch {
-            runCatching {
-                _catsView?.populateImage(catsImage.getCatImage().first().url)
+                val catData = async {
+                    CatData(
+                        catsService.getCatFact(),
+                        catsImage.getCatImage().firstOrNull()
+                    )
+                }
+                catData.await().apply {
+                    _catsView?.populateFact(fact)
+                    image?.url?.let {
+                        _catsView?.populateImage(it)
+                    }
+                }
             }.onFailure { throwable ->
                 CrashMonitor.trackWarning()
             }
