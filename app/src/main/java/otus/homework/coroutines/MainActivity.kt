@@ -1,13 +1,15 @@
 package otus.homework.coroutines
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var catsPresenter: CatsPresenter
-
+    private lateinit var catsPresenter: CatsPresenter
     private val diContainer = DiContainer()
+
+    private val presenterScope = PresenterScope()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -18,12 +20,16 @@ class MainActivity : AppCompatActivity() {
         catsPresenter = CatsPresenter(diContainer.service)
         view.presenter = catsPresenter
         catsPresenter.attachView(view)
-        catsPresenter.onInitComplete()
+
+        presenterScope.launch {
+            catsPresenter.onInitComplete()
+        }
     }
 
     override fun onStop() {
         if (isFinishing) {
             catsPresenter.detachView()
+            presenterScope.cancel()
         }
         super.onStop()
     }
