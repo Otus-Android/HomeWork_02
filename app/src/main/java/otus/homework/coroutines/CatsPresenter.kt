@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
 import kotlin.coroutines.CoroutineContext
@@ -14,23 +15,37 @@ class CatsPresenter(
 ) {
 
     private var _catsView: ICatsView? = null
-    private var getFactJob: Job? = null
+    private var job: Job? = null
 
     fun onInitComplete() {
-        getFactJob = PresenterScope().launch {
-            runCatching { catsService.getCatFact() }
-                .onSuccess { _catsView?.populate(it) }
-                .onFailure {
-                    if (it is SocketTimeoutException) {
-                        onErrorMessage(SOCKET_TIMEOUT_EXCEPTION_MESSAGE)
-                        return@launch
-                    }
+        job = PresenterScope().launch {
+            val factResult = async {
+                runCatching { catsService.getCatFact().fact }
+                    .onFailure { showError(it) }
+            }
+            val imageResult = async {
+                runCatching { catsService.getImage().firstOrNull()?.url.orEmpty() }
+                    .onFailure { showError(it) }
+            }
 
-                    val message = it.localizedMessage.orEmpty()
-                    onErrorMessage(message)
-                    CrashMonitor.trackWarning(message)
-                }
+            _catsView?.populate(
+                SomeCatFact(
+                    factText = factResult.await().getOrNull().orEmpty(),
+                    imageUrl = imageResult.await().getOrNull().orEmpty()
+                )
+            )
         }
+    }
+
+    private fun showError(throwable: Throwable) {
+        if (throwable is SocketTimeoutException) {
+            onErrorMessage(SOCKET_TIMEOUT_EXCEPTION_MESSAGE)
+            return
+        }
+
+        val message = throwable.localizedMessage.orEmpty()
+        onErrorMessage(message)
+        CrashMonitor.trackWarning(message)
     }
 
     fun attachView(catsView: ICatsView) {
@@ -43,7 +58,7 @@ class CatsPresenter(
     }
 
     fun canselJob() {
-        if (getFactJob?.isActive == true) getFactJob?.cancel()
+        if (job?.isActive == true) job?.cancel()
     }
 
     private companion object {
