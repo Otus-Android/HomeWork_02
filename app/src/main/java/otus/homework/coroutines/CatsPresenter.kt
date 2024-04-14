@@ -1,28 +1,46 @@
 package otus.homework.coroutines
 
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import android.content.Context
+import android.widget.Toast
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import java.net.SocketTimeoutException
 
 class CatsPresenter(
-    private val catsService: CatsService
+    private val context: Context,
+    private val catsRepository: ICatsRepository,
 ) {
-
+    private var _catsJob: Job? = null
     private var _catsView: ICatsView? = null
 
-    fun onInitComplete() {
-        catsService.getCatFact().enqueue(object : Callback<Fact> {
+    private val scope: CoroutineScope by lazy { PresenterScope() }
 
-            override fun onResponse(call: Call<Fact>, response: Response<Fact>) {
-                if (response.isSuccessful && response.body() != null) {
-                    _catsView?.populate(response.body()!!)
+    fun onInitComplete() {
+        cancelCatJob()
+        _catsJob = scope.launch {
+            try {
+                val cat: Cat = catsRepository.getCat()
+
+                _catsView?.populate(cat)
+            } catch (e: SocketTimeoutException) {
+                Toast.makeText(
+                    context,
+                    "Не удалось получить ответ от сервера",
+                    Toast.LENGTH_SHORT,
+                ).show()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                CrashMonitor.trackWarning()
+                e.message?.let { eMessage ->
+                    Toast.makeText(
+                        context,
+                        eMessage,
+                        Toast.LENGTH_SHORT,
+                    ).show()
                 }
             }
-
-            override fun onFailure(call: Call<Fact>, t: Throwable) {
-                CrashMonitor.trackWarning()
-            }
-        })
+        }
     }
 
     fun attachView(catsView: ICatsView) {
@@ -31,5 +49,14 @@ class CatsPresenter(
 
     fun detachView() {
         _catsView = null
+    }
+
+    fun dispose() {
+        cancelCatJob()
+    }
+
+    private fun cancelCatJob() {
+        _catsJob?.cancel()
+        _catsJob = null
     }
 }
