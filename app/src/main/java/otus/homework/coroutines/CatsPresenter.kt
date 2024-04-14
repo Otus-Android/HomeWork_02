@@ -5,7 +5,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.net.SocketTimeoutException
 
 class CatsPresenter(
@@ -20,13 +19,12 @@ class CatsPresenter(
         job?.cancel()
         job = presenterScope.launch {
             try {
-                var fact: Fact?
-                withContext(Dispatchers.IO) {
-                    fact = catsService.getCatFact()
-                }
-                fact?.let {
-                    _catsView?.populate(it)
-                }
+                _catsView?.populate(
+                    CatsFactModel(
+                        fact = catsService.getCatFact().fact,
+                        image = catsService.getImage(RANDOM_IMAGE_URL).first().url
+                    )
+                )
             } catch (e: SocketTimeoutException) {
                 _catsView?.showError()
             }
@@ -41,5 +39,9 @@ class CatsPresenter(
         _catsView = null
         job?.cancel()
         job = null
+    }
+
+    companion object {
+        private const val RANDOM_IMAGE_URL = "https://api.thecatapi.com/v1/images/search"
     }
 }
