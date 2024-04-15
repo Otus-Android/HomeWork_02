@@ -3,7 +3,8 @@ package otus.homework.coroutines
 import java.net.SocketTimeoutException
 
 class CatsPresenter(
-    private val catsService: CatsService
+    private val catsService: CatsService,
+    private val serviceCatImage: CatsService
 ) {
 
     private var _catsView: ICatsView? = null
@@ -12,7 +13,11 @@ class CatsPresenter(
         try {
             val responseCatFact = catsService.getCatFact()
             if (responseCatFact.isSuccessful && responseCatFact.body() != null) {
-                _catsView?.populate(responseCatFact.body()!!)
+                val responseCatImage = serviceCatImage.getCatImage()
+                if (responseCatImage.isSuccessful && responseCatImage.body() != null) {
+                    _catsView?.populate(responseCatFact.body()!!)
+                    _catsView?.renderingImage(responseCatImage.body()!!)
+                }
             }
         } catch (exception: SocketTimeoutException) {
             _catsView?.showToast("Не удалось получить ответ от сервера")
