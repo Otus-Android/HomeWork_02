@@ -9,5 +9,5 @@ interface CatsService {
     suspend fun getCatFact(): Fact
 
     @GET
-    suspend fun getImage(@Url request: String): List<CatImage>
+    suspend fun getImage(@Url request: String = "https://api.thecatapi.com/v1/images/search"): List<CatImage>
 }
