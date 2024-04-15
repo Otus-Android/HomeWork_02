@@ -5,7 +5,7 @@ import android.os.Bundle
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var catsPresenter: CatsPresenter
+    private lateinit var catsViewModel: CatsViewModel
 
     private val diContainer = DiContainer()
 
@@ -15,19 +15,11 @@ class MainActivity : AppCompatActivity() {
         val view = layoutInflater.inflate(R.layout.activity_main, null) as CatsView
         setContentView(view)
 
-        catsPresenter = CatsPresenter(
+        catsViewModel = CatsViewModel(
             catsService = diContainer.serviceCats,
             imagesService = diContainer.serviceImages
         )
-        view.presenter = catsPresenter
-        catsPresenter.attachView(view)
-        catsPresenter.onInitComplete()
-    }
-
-    override fun onStop() {
-        if (isFinishing) {
-            catsPresenter.detachView()
-        }
-        super.onStop()
+        view.viewModel = catsViewModel
+        catsViewModel.onInitComplete()
     }
 }
