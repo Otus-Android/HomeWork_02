@@ -27,4 +27,9 @@ class MainActivity : AppCompatActivity() {
         }
         super.onStop()
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        catsPresenter.onDestroy()  // Явный вызов для очистки ресурсов презентера
+    }
 }
