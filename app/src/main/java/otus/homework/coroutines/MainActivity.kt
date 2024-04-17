@@ -2,10 +2,12 @@ package otus.homework.coroutines
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.lifecycle.ViewModelProvider
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var catsPresenter: CatsPresenter
+    //lateinit var catsPresenter: CatsPresenter
+    lateinit var viewModel: CatsViewModel
 
     private val diContainer = DiContainer()
 
@@ -14,16 +16,16 @@ class MainActivity : AppCompatActivity() {
 
         val view = layoutInflater.inflate(R.layout.activity_main, null) as CatsView
         setContentView(view)
-
-        catsPresenter = CatsPresenter(diContainer.service, diContainer.imageService)
-        view.presenter = catsPresenter
-        catsPresenter.attachView(view)
-        catsPresenter.onInitComplete()
+        viewModel = CatsViewModelFactory(diContainer.service, diContainer.imageService)
+            .create(CatsViewModel::class.java)
+        view.viewModel = viewModel
+        viewModel.attachView(view)
+        viewModel.onInitComplete()
     }
 
     override fun onStop() {
         if (isFinishing) {
-            catsPresenter.detachView()
+            viewModel.detachView()
         }
         super.onStop()
     }
