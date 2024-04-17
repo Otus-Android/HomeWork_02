@@ -11,7 +11,8 @@ import java.net.SocketTimeoutException
 import kotlin.coroutines.CoroutineContext
 
 class CatsPresenter(
-    private val catsService: CatsService
+    private val catsService: CatsService,
+    private val imageService: ImageService
 ): CoroutineScope {
     private val job = Job()
     override val coroutineContext: CoroutineContext = CoroutineName("CatsCoroutine") + job
@@ -22,8 +23,10 @@ class CatsPresenter(
         launch {
             try {
                 val fact = catsService.getCatFact()
+                val image = imageService.getRandomImage()
+                val model = FactPresentationModel(fact, image.first())
                 withContext(Dispatchers.Main) {
-                    _catsView?.populate(fact)
+                    _catsView?.populate(model)
                 }
             } catch (e: Exception) {
                 when (e) {
@@ -35,7 +38,6 @@ class CatsPresenter(
                     }
                 }
             }
-
         }
     }
 
