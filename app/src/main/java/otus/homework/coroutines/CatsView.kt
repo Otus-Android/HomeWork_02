@@ -8,6 +8,9 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.findViewTreeViewModelStoreOwner
+import androidx.lifecycle.get
 import com.squareup.picasso.Picasso
 
 class CatsView @JvmOverloads constructor(
@@ -16,7 +19,9 @@ class CatsView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
 
-    var viewModel: CatsViewModel? = null
+    private val viewModel by lazy {
+        ViewModelProvider(findViewTreeViewModelStoreOwner()!!).get<CatsViewModel>()
+    }
     private val observer = Observer<Result> { state ->
         when (state) {
             is Result.Success -> populate(state.cat)
@@ -26,18 +31,18 @@ class CatsView @JvmOverloads constructor(
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        viewModel?.liveData?.observeForever(observer)
+        viewModel.liveData.observeForever(observer)
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        viewModel?.liveData?.removeObserver(observer)
+        viewModel.liveData.removeObserver(observer)
     }
 
     override fun onFinishInflate() {
         super.onFinishInflate()
         findViewById<Button>(R.id.button).setOnClickListener {
-            viewModel?.onButtonClick()
+            viewModel.onButtonClick()
         }
     }
 
