@@ -2,10 +2,12 @@ package otus.homework.coroutines
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var catsPresenter: CatsPresenter
+    private lateinit var viewModel: CatsViewModel
 
     private val diContainer = DiContainer()
 
@@ -15,21 +17,17 @@ class MainActivity : AppCompatActivity() {
         val view = layoutInflater.inflate(R.layout.activity_main, null) as CatsView
         setContentView(view)
 
-        catsPresenter = CatsPresenter(diContainer.service)
-        view.presenter = catsPresenter
-        catsPresenter.attachView(view)
-        catsPresenter.onInitComplete()
-    }
+        val factory = CatsViewModelFactory(diContainer.service)
+        viewModel = ViewModelProvider(this, factory)[CatsViewModel::class.java]
+        view.viewModel = viewModel
 
-    override fun onStop() {
-        if (isFinishing) {
-            catsPresenter.detachView()
-        }
-        super.onStop()
-    }
+        viewModel.catsData.observe(this, Observer { result ->
+            when (result) {
+                is Result.Success -> view.populate(result.data)
+                is Result.Error -> view.showError(result.message)
+            }
+        })
 
-    override fun onDestroy() {
-        super.onDestroy()
-        catsPresenter.onDestroy()  // Явный вызов для очистки ресурсов презентера
+        viewModel.loadCatData()
     }
 }
