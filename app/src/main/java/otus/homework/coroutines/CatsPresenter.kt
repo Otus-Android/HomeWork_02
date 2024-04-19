@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
@@ -18,8 +19,13 @@ class CatsPresenter(
     fun onInitComplete() {
         job = coroutineScope.launch {
             try {
-                val fact = catsService.getCatFact()  // Используем suspend функцию
-                _catsView?.populate(fact)
+                val factDeferred = async { catsService.getCatFact() }
+                val imageDeferred = async { catsService.getCatImage().firstOrNull() }
+
+                val fact = factDeferred.await()
+                val image = imageDeferred.await()
+
+                _catsView?.populate(CatFactAndImage(fact, image?.url))
             } catch (e: Throwable) {
                 handleErrors(e)
             }
