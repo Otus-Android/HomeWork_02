@@ -9,7 +9,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var catsPresenter: CatsPresenter
 
-    private val diContainer = DiContainer()
+    private val diContainer = ApiService.DiContainer()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
         val view = layoutInflater.inflate(R.layout.activity_main, null) as CatsView
         setContentView(view)
 
-        catsPresenter = CatsPresenter(diContainer.service) {
+        catsPresenter = CatsPresenter(diContainer) {
             onShowErrorMessage(if (it is SocketTimeoutException) getString(R.string.timeout_exception_message) else it.localizedMessage.orEmpty())
         }
         view.presenter = catsPresenter
