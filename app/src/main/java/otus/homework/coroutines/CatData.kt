@@ -14,6 +14,8 @@ data class CatImage(
 	@field:SerializedName("url") val url: String
 )
 
+val emptyCatData = CatData("", "")
+
 data class CatData(
 	val fact: String,
 	val imageUrl: String

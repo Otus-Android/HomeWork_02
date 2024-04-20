@@ -14,7 +14,7 @@ class CatsView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr), ICatsView {
 
-    var presenter :CatsPresenter? = null
+    var presenter :ICatsPresenter? = null
 
     override fun onFinishInflate() {
         super.onFinishInflate()
@@ -23,7 +23,7 @@ class CatsView @JvmOverloads constructor(
         }
     }
 
-    override fun populate(catData: CatData) {
+    private fun updateData(catData: CatData){
         findViewById<TextView>(R.id.fact_textView).text = catData.fact
         Picasso.get()
             .load(catData.imageUrl)
@@ -33,8 +33,25 @@ class CatsView @JvmOverloads constructor(
             .error(R.drawable.image_not_found)
             .into(findViewById<ImageView>(R.id.imageCat))
     }
+
+    override fun populate(catData: CatData) {
+        updateData(catData)
+    }
+
+    override fun populate(result: Result<CatData>) {
+        when (result) {
+            is Result.Error -> {
+                updateData(emptyCatData)
+            }
+
+            is Result.Success -> {
+                updateData(result.data)
+            }
+        }
+    }
 }
 
 interface ICatsView {
     fun populate(catData: CatData)
+    fun populate(result: Result<CatData>)
 }
