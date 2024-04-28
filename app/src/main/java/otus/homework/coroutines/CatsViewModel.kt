@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
 
@@ -30,21 +31,17 @@ class CatsViewModel(
         job?.cancel()
         job = viewModelScope.launch(exceptionHandler) {
             try {
+                val factDeferred = async { catsService.getCatFact() }
+                val imageDeferred = async { catsService.getImage() }
                 _state.value = Result.Success(
                     CatsFactModel(
-                        fact = catsService.getCatFact().fact,
-                        image = catsService.getImage().first().url
+                        fact = factDeferred.await().fact,
+                        image = imageDeferred.await().first().url
                     )
                 )
             } catch (e: SocketTimeoutException) {
                 _state.value = Result.Error
             }
         }
-    }
-
-    override fun onCleared() {
-        job?.cancel()
-        job = null
-        super.onCleared()
     }
 }
