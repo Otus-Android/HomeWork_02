@@ -7,8 +7,8 @@ import androidx.appcompat.app.AppCompatActivity
 class MainActivity : AppCompatActivity() {
 
     //    private lateinit var catsPresenter: CatsPresenter
+    //    private val presenterScope = PresenterScope()
     private val diContainer = DiContainer()
-    private val presenterScope = PresenterScope()
 
     private val viewModel by viewModels<CatsViewModel> {
         CatsViewModelFactory(diContainer.serviceCatFact, diContainer.serviceCatImage)
@@ -46,10 +46,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        if (isFinishing) {
+//        if (isFinishing) {
 //            catsPresenter.detachView()
-            presenterScope.cancel()
-        }
+//            presenterScope.cancel()
+//        }
         super.onStop()
     }
 }

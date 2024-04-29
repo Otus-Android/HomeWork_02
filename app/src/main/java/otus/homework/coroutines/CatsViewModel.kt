@@ -6,12 +6,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
 
 class CatsViewModel(
-    private val catsService: CatsService,
-    private val serviceCatImage: CatsService
+    private val catsFactService: CatsFactService,
+    private val catsImageService: CatsImageService
 ) : ViewModel() {
     private val _catLiveData = MutableLiveData<Result>()
     val catsLiveData: LiveData<Result> = _catLiveData
@@ -27,8 +28,10 @@ class CatsViewModel(
 
     fun onInitComplete() {
         viewModelScope.launch(coroutineExceptionHandler) {
-            val responseCatFact = catsService.getCatFact()
-            val responseCatImage = serviceCatImage.getCatImage()
+            val deferredCatFact = async { catsFactService.getCatFact() }
+            val deferredCatImage = async { catsImageService.getCatImage() }
+            val responseCatFact = deferredCatFact.await()
+            val responseCatImage = deferredCatImage.await()
 
             if (
                 responseCatFact.isSuccessful && responseCatFact.body() != null &&
@@ -43,12 +46,12 @@ class CatsViewModel(
 }
 
 class CatsViewModelFactory(
-    private val catsService: CatsService,
-    private val serviceCatImage: CatsService
+    private val catsFactService: CatsFactService,
+    private val catsImageService: CatsImageService
 ) : ViewModelProvider.NewInstanceFactory() {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
-        CatsViewModel(catsService, serviceCatImage) as T
+        CatsViewModel(catsFactService, catsImageService) as T
 }
 
 sealed class Result

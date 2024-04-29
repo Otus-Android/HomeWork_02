@@ -10,9 +10,4 @@ class PresenterScope : CoroutineScope {
     private val job = Job()
 
     override val coroutineContext = job + Dispatchers.Main + CoroutineName("CatsCoroutine")
-
-    fun cancel() {
-        job.cancel()
-    }
-
 }
