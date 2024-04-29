@@ -8,6 +8,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.squareup.picasso.Picasso
+import kotlinx.coroutines.launch
 
 class CatsView @JvmOverloads constructor(
     context: Context,
@@ -15,17 +16,23 @@ class CatsView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr), ICatsView {
 
-//    var presenter: CatsPresenter? = null
-    var viewModel: CatsViewModel? = null
+    var presenter: CatsPresenter? = null
+    val presenterScope = PresenterScope()
+//    var viewModel: CatsViewModel? = null
 
     override fun onFinishInflate() {
         super.onFinishInflate()
-        findViewById<Button>(R.id.button).setOnClickListener {
-//            PresenterScope().launch {
-//                presenter?.onInitComplete()
-//            }
+        fetchCatData()
 
-            viewModel?.onInitComplete()
+        findViewById<Button>(R.id.button).setOnClickListener {
+            fetchCatData()
+//            viewModel?.onInitComplete()
+        }
+    }
+
+    private fun fetchCatData() {
+        presenterScope.launch {
+            presenter?.onInitComplete()
         }
     }
 

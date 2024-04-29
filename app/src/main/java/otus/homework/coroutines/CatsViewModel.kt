@@ -29,15 +29,12 @@ class CatsViewModel(
     fun onInitComplete() {
         viewModelScope.launch(coroutineExceptionHandler) {
             val deferredCatFact = async { catsFactService.getCatFact() }
-            val deferredCatImage = async { catsImageService.getCatImage() }
-            val responseCatFact = deferredCatFact.await()
-            val responseCatImage = deferredCatImage.await()
+            val deferredCatImages = async { catsImageService.getCatImage() }
+            val сatFact = deferredCatFact.await()
+            val сatImages = deferredCatImages.await()
 
-            if (
-                responseCatFact.isSuccessful && responseCatFact.body() != null &&
-                responseCatImage.isSuccessful && responseCatImage.body() != null
-            ) {
-                _catLiveData.value = Success(responseCatFact.body()!!, responseCatImage.body()!!)
+            if (сatFact != null && сatImages != null) {
+                _catLiveData.value = Success(сatFact, сatImages)
             } else {
                 _catLiveData.value = Error("Не удалось загрузить данные")
             }

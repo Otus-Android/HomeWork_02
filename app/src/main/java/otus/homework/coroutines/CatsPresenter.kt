@@ -1,6 +1,7 @@
 package otus.homework.coroutines
 
 import java.net.SocketTimeoutException
+import kotlin.coroutines.cancellation.CancellationException
 
 class CatsPresenter(
     private val catsFactService: CatsFactService,
@@ -11,19 +12,21 @@ class CatsPresenter(
 
     suspend fun onInitComplete() {
         try {
-            val responseCatFact = catsFactService.getCatFact()
-            if (responseCatFact.isSuccessful && responseCatFact.body() != null) {
-                val responseCatImage = catsImageService.getCatImage()
-                if (responseCatImage.isSuccessful && responseCatImage.body() != null) {
-                    _catsView?.populate(responseCatFact.body()!!)
-                    _catsView?.renderingImage(responseCatImage.body()!!)
-                }
+            val catFact = catsFactService.getCatFact()
+            val сatImages = catsImageService.getCatImage()
+
+            if (catFact != null && сatImages != null) {
+                _catsView?.populate(catFact)
+                _catsView?.renderingImage(сatImages)
+            } else {
+                _catsView?.showToast("Нет данных")
             }
         } catch (exception: SocketTimeoutException) {
             _catsView?.showToast("Не удалось получить ответ от сервера")
         } catch (exception: Throwable) {
             CrashMonitor.trackWarning()
             _catsView?.showToast("${exception.message}")
+            throw CancellationException(exception.message)
         }
     }
 
