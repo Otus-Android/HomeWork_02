@@ -16,9 +16,9 @@ class CatsView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr), ICatsView {
 
-    var presenter: CatsPresenter? = null
     val presenterScope = PresenterScope()
-//    var viewModel: CatsViewModel? = null
+    var viewModel: CatsViewModel? = null
+//    var presenter: CatsPresenter? = null
 
     override fun onFinishInflate() {
         super.onFinishInflate()
@@ -26,13 +26,13 @@ class CatsView @JvmOverloads constructor(
 
         findViewById<Button>(R.id.button).setOnClickListener {
             fetchCatData()
-//            viewModel?.onInitComplete()
         }
     }
 
     private fun fetchCatData() {
         presenterScope.launch {
-            presenter?.onInitComplete()
+//            presenter?.onInitComplete()
+            viewModel?.onInitComplete()
         }
     }
 
