@@ -3,24 +3,34 @@ package otus.homework.coroutines
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
 
 class CatsPresenter(
-    private val catsService: CatsService
+    private val catsService: CatsService,
+    private val catImageService: CatImageService
 ) {
 
     private var _catsView: ICatsView? = null
-    private val presenterScope = CoroutineScope(Dispatchers.Main + CoroutineName("CatsCoroutine") )
+    private val presenterJob = Job()
+    private val presenterScope = CoroutineScope(Dispatchers.Main + presenterJob + CoroutineName("CatsCoroutine") )
 
     fun onInitComplete() {
         presenterScope.launch {
             try {
-                val response = catsService.getCatFact()
-                if (response.isSuccessful) {
-                    response.body()?.let {
-                        _catsView?.populate(it)
-                    }
+                val factDeferred = async { catsService.getCatFact() }
+                val imageDeferred = async { catImageService.getCatImage() }
+
+                val factResponse = factDeferred.await()
+                val imageResponse = imageDeferred.await()
+
+                if (factResponse.isSuccessful && imageResponse.isSuccessful) {
+                    val fact = factResponse.body()?.fact ?: ""
+                    val image = imageResponse.body()?.get(0)?.url ?: ""
+
+                    _catsView?.populate(CatInfo(fact, image))
                 } else {
                     CrashMonitor.trackWarning()
                 }
@@ -39,5 +49,6 @@ class CatsPresenter(
 
     fun detachView() {
         _catsView = null
+        presenterJob.cancel()
     }
 }
