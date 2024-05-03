@@ -3,9 +3,11 @@ package otus.homework.coroutines
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
+import com.squareup.picasso.Picasso
 
 class CatsView @JvmOverloads constructor(
     context: Context,
@@ -22,8 +24,14 @@ class CatsView @JvmOverloads constructor(
         }
     }
 
-    override fun populate(fact: Fact) {
-        findViewById<TextView>(R.id.fact_textView).text = fact.fact
+    override fun populate(catModel: CatModel) {
+        findViewById<TextView>(R.id.fact_textView).text = catModel.fact.fact
+
+        Picasso.get()
+            .load(catModel.image.first().url)
+            .resize(200, 200)
+            .centerCrop()
+            .into(findViewById<ImageView>(R.id.catImageView))
     }
 
     override fun showToast(text: String) {
@@ -41,7 +49,7 @@ class CatsView @JvmOverloads constructor(
 
 interface ICatsView {
 
-    fun populate(fact: Fact)
+    fun populate(catModel: CatModel)
     fun showToast(text: String)
     fun showToast()
 }

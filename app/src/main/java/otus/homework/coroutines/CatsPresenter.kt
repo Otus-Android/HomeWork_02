@@ -1,10 +1,12 @@
 package otus.homework.coroutines
 
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class CatsPresenter(
-    private val catsService: CatsService,
+    private val catFactService: CatFactService,
+    private val serviceImage: CatImageService,
     private val presenterScope: PresenterScope,
 ) {
 
@@ -12,7 +14,11 @@ class CatsPresenter(
 
     fun onInitComplete() {
         presenterScope.launch {
-            runCatching { catsService.getCatFact() }
+            runCatching {
+                val fact = async { catFactService.getCatFact() }
+                val image = async { serviceImage.getCatImage() }
+                CatModel(fact.await(), image.await())
+            }
                 .onSuccess { _catsView?.populate(it) }
                 .onFailure { errorParser(it) }
         }
