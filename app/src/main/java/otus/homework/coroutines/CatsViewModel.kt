@@ -21,9 +21,14 @@ class CatsViewModel(
 
     fun loadCatData() {
         viewModelScope.launch(handler) {
-            val fact = async { catsService.getCatFact() }
-            val image = async { catsService.getCatImage().firstOrNull() }
-            _catsData.postValue(Result.Success(CatFactAndImage(fact.await(), image.await()?.url)))
+            try {
+                val fact = async { catsService.getCatFact() }
+                val image = async { catsService.getCatImage().firstOrNull() }
+                _catsData.value = Result.Success(CatFactAndImage(fact.await(), image.await()?.url))
+            } catch (e: Exception) {
+                _catsData.value = Result.Error("An error occurred: ${e.localizedMessage}")
+                CrashMonitor.trackWarning(e.localizedMessage.orEmpty())
+            }
         }
     }
 }

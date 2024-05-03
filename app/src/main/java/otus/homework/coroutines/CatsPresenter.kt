@@ -8,6 +8,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
+import kotlin.coroutines.cancellation.CancellationException
 
 class CatsPresenter(
     private val catsService: CatsService
@@ -33,11 +34,16 @@ class CatsPresenter(
     }
 
     private fun handleErrors(e: Throwable) {
-        if (e is SocketTimeoutException) {
-            _catsView?.showError("Не удалось получить ответ от сервера")
-        } else {
+        when (e) {
+            is CancellationException -> throw e  // Проброс CancellationException дальше
+            is SocketTimeoutException -> {
+                _catsView?.showError("Не удалось получить ответ от сервера")
+            }
+
+            else -> {
             _catsView?.showError(e.message.orEmpty())
-            CrashMonitor.trackWarning(e.message.orEmpty())
+                CrashMonitor.trackWarning(e.message.orEmpty())
+            }
         }
     }
 
@@ -52,7 +58,6 @@ class CatsPresenter(
     }
 
     fun onDestroy() {
-        job?.cancel()
         coroutineScope.cancel()  // Отмена всех корутин
     }
 }
