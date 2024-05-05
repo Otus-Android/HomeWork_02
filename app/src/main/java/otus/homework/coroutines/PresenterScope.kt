@@ -10,6 +10,6 @@ class PresenterScope : CoroutineScope {
     get() = Dispatchers.Main + CoroutineName(NAME)
 
   companion object {
-    const val NAME = "CatsCoroutine"
+    private const val NAME = "CatsCoroutine"
   }
 }

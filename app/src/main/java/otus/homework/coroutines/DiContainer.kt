@@ -1,5 +1,6 @@
 package otus.homework.coroutines
 
+import kotlinx.coroutines.Dispatchers
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -17,6 +18,7 @@ class DiContainer {
 
     val repository: ICatsRepository by lazy {
         CatsRepositoryImpl(
+            ioDispatcher = Dispatchers.IO,
             service = service,
         )
     }

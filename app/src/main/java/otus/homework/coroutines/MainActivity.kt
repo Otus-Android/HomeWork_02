@@ -23,10 +23,7 @@ class MainActivity : AppCompatActivity() {
         val view = layoutInflater.inflate(R.layout.activity_main, null) as CatsView
         setContentView(view)
 
-        catsPresenter = CatsPresenter(
-            context = applicationContext,
-            catsRepository = diContainer.repository,
-        )
+        catsPresenter = CatsPresenter(diContainer.repository)
         view.presenter = catsPresenter
 //        catsPresenter.attachView(view)
 //        catsPresenter.onInitComplete()
@@ -50,7 +47,6 @@ class MainActivity : AppCompatActivity() {
         if (isFinishing) {
             catsPresenter.detachView()
         }
-        catsPresenter.dispose()
         super.onStop()
     }
 }

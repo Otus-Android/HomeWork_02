@@ -1,46 +1,57 @@
 package otus.homework.coroutines
 
-import android.content.Context
-import android.widget.Toast
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
 
 class CatsPresenter(
-    private val context: Context,
     private val catsRepository: ICatsRepository,
 ) {
     private var _catsJob: Job? = null
     private var _catsView: ICatsView? = null
 
-    private val scope: CoroutineScope by lazy { PresenterScope() }
+    private val scope: CoroutineScope = PresenterScope()
 
     fun onInitComplete() {
         cancelCatJob()
         _catsJob = scope.launch {
             try {
-                val cat: Cat = catsRepository.getCat()
+                val cat: Cat = loadCat()
 
                 _catsView?.populate(cat)
             } catch (e: SocketTimeoutException) {
-                Toast.makeText(
-                    context,
-                    "Не удалось получить ответ от сервера",
-                    Toast.LENGTH_SHORT,
-                ).show()
+                _catsView?.showToast("Не удалось получить ответ от сервера")
             } catch (e: Exception) {
+                if (e is CancellationException) {
+                    throw e
+                }
+
                 e.printStackTrace()
                 CrashMonitor.trackWarning()
                 e.message?.let { eMessage ->
-                    Toast.makeText(
-                        context,
-                        eMessage,
-                        Toast.LENGTH_SHORT,
-                    ).show()
+                    _catsView?.showToast(eMessage)
                 }
             }
         }
+    }
+
+    private suspend fun loadCat(): Cat = coroutineScope {
+        val defFact = async {
+            catsRepository.getCatFact()
+        }
+        val defPresentation = async {
+            catsRepository.getCatPresentation()
+        }
+        val (fact, presentation) = Pair(defFact.await(), defPresentation.await())
+
+        Cat(
+            fact = fact,
+            presentation = presentation,
+        )
     }
 
     fun attachView(catsView: ICatsView) {
@@ -48,11 +59,8 @@ class CatsPresenter(
     }
 
     fun detachView() {
-        _catsView = null
-    }
-
-    fun dispose() {
         cancelCatJob()
+        _catsView = null
     }
 
     private fun cancelCatJob() {
