@@ -7,6 +7,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
+import kotlin.coroutines.cancellation.CancellationException
 
 class CatsPresenter(
     private val catsService: CatsService,
@@ -26,9 +27,9 @@ class CatsPresenter(
                 val factResponse = factDeferred.await()
                 val imageResponse = imageDeferred.await()
 
-                if (factResponse.isSuccessful && imageResponse.isSuccessful) {
+                if (factResponse.isSuccessful) {
                     val fact = factResponse.body()?.fact ?: ""
-                    val image = imageResponse.body()?.get(0)?.url ?: ""
+                    val image = imageResponse[0].url
 
                     _catsView?.populate(CatInfo(fact, image))
                 } else {
@@ -36,6 +37,8 @@ class CatsPresenter(
                 }
             } catch (e: SocketTimeoutException) {
                 _catsView?.showError("Не удалось получить ответ от сервером")
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 CrashMonitor.trackWarning()
                 _catsView?.showError(e.message ?: "Произошла ошибка")

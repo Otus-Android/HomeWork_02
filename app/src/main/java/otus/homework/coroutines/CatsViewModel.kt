@@ -8,6 +8,7 @@
     import kotlinx.coroutines.async
     import kotlinx.coroutines.launch
     import java.net.SocketTimeoutException
+    import kotlin.coroutines.cancellation.CancellationException
 
     class CatsViewModel(
         private val diContainer: DiContainer
@@ -19,7 +20,7 @@
 
         private val coroutineExceptionHandler = CoroutineExceptionHandler { coroutineContext, throwable ->
             crashMonitor.trackException(throwable)
-            _catsInfo.postValue(Result.Error("coroutineExceptionHandler"))
+            _catsInfo.value = Result.Error("coroutineExceptionHandler")
         }
 
         fun getCatInfo() {
@@ -31,9 +32,9 @@
                     val factResponse = factDeferred.await()
                     val imageResponse = imageDeferred.await()
 
-                    if (factResponse.isSuccessful && imageResponse.isSuccessful) {
+                    if (factResponse.isSuccessful) {
                         val fact = factResponse.body()?.fact ?: ""
-                        val image = imageResponse.body()?.get(0)?.url ?: ""
+                        val image = imageResponse[0].url
 
                         _catsInfo.postValue(Result.Success(CatInfo(fact, image)))
                     } else {
@@ -41,6 +42,8 @@
                     }
                 } catch (e: SocketTimeoutException) {
                     _catsInfo.postValue(Result.Error("Не удалось получить ответ от сервером"))
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     CrashMonitor.trackWarning()
                     _catsInfo.postValue(Result.Error(e.message ?: "Произошла ошибка"))
