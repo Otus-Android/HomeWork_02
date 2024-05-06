@@ -33,11 +33,7 @@ class CatsViewModel(
             val сatFact = deferredCatFact.await()
             val сatImages = deferredCatImages.await()
 
-            if (сatFact != null && сatImages != null) {
-                _catLiveData.value = Success(сatFact, сatImages)
-            } else {
-                _catLiveData.value = Error("Не удалось загрузить данные")
-            }
+            _catLiveData.value = Success(сatFact, сatImages)
         }
     }
 }

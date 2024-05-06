@@ -15,18 +15,14 @@ class CatsPresenter(
             val catFact = catsFactService.getCatFact()
             val сatImages = catsImageService.getCatImage()
 
-            if (catFact != null && сatImages != null) {
-                _catsView?.populate(catFact)
-                _catsView?.renderingImage(сatImages)
-            } else {
-                _catsView?.showToast("Нет данных")
-            }
+            _catsView?.populate(catFact)
+            _catsView?.renderingImage(сatImages)
         } catch (exception: SocketTimeoutException) {
             _catsView?.showToast("Не удалось получить ответ от сервера")
         } catch (exception: Throwable) {
             CrashMonitor.trackWarning()
             _catsView?.showToast("${exception.message}")
-            throw CancellationException(exception.message)
+            if (exception is CancellationException) throw exception
         }
     }
 
