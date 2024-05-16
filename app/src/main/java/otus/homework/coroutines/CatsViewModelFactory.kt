@@ -5,9 +5,10 @@ import androidx.lifecycle.ViewModelProvider
 
 class CatsViewModelFactory(
     private val catsService: CatsService,
-    private val imageService: ImageService
+    private val imageService: ImageService,
+    private val catsCoroutineScope: CatsCoroutineScope
 ) : ViewModelProvider.NewInstanceFactory() {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return CatsViewModel(catsService, imageService) as T
+        return CatsViewModel(catsService, imageService, catsCoroutineScope) as T
     }
 }
