@@ -1,5 +1,6 @@
 package otus.homework.coroutines
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,25 +13,26 @@ import kotlin.coroutines.CoroutineContext
 
 class CatsPresenter(
     private val catsService: CatsService,
-    private val imageService: ImageService
-): CoroutineScope {
+    private val imageService: ImageService,
+    private val catsCoroutineScope: CatsCoroutineScope
+) {
     private val job = Job()
-    override val coroutineContext: CoroutineContext = CoroutineName("CatsCoroutine") + job
     private var _catsView: ICatsView? = null
 
 
     fun onInitComplete() {
-        launch {
+        catsCoroutineScope.launch {
             try {
                 val fact = catsService.getCatFact()
                 val image = imageService.getRandomImage()
                 val model = FactPresentationModel(fact, image.first())
-                withContext(Dispatchers.Main) {
-                    _catsView?.populate(model)
-                }
+                _catsView?.populate(model)
             } catch (e: Exception) {
                 when (e) {
                     is SocketTimeoutException -> {
+                        _catsView?.onError(R.string.connection_error_message)
+                    }
+                    is CancellationException -> {
                         _catsView?.onError(R.string.connection_error_message)
                     }
                     else -> {
