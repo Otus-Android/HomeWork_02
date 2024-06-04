@@ -3,6 +3,8 @@ package otus.homework.coroutines
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
@@ -21,8 +23,9 @@ class CatsPresenter(
         scope.launch {
             try {
                 Log.d("CatsPresenter", this.coroutineContext.toString())
-                val result = catsService.getCatFact()
-                _catsView?.populate(result)
+                val resultFact = catsService.getCatFact()
+                val resultImg = catsService.getImg()
+                _catsView?.populate(Content(resultImg, resultFact))
             } catch (e: SocketTimeoutException) {
                 _catsView?.showToast("Не удалось получить ответ от сервером")
             } catch (e: Exception) {
@@ -36,6 +39,7 @@ class CatsPresenter(
     }
 
     fun detachView() {
+        scope.cancel()
         _catsView = null
     }
 }
