@@ -21,7 +21,7 @@ class CatsViewModel(
 
     val context = CoroutineExceptionHandler { _, throwable ->
         CrashMonitor.trackWarning(throwable.message.toString())
-    }  + SupervisorJob()
+    } + SupervisorJob()
 
     init {
         populate()
@@ -35,8 +35,9 @@ class CatsViewModel(
                 val content = Content(resultImg.await(), resultFact.await())
                 _liveData.value = ApiResult.Success(content)
             } catch (_: CancellationException) {
-            }catch (e: SocketTimeoutException) {
-                _liveData.value = ApiResult.Error(Throwable("Не удалось получить ответ от сервером"))
+            } catch (e: SocketTimeoutException) {
+                _liveData.value =
+                    ApiResult.Error(Throwable("Не удалось получить ответ от сервером"))
             } catch (e: Exception) {
                 _liveData.value = ApiResult.Error(Throwable(e.message))
             }
