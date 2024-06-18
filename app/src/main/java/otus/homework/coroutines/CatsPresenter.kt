@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import otus.homework.coroutines.model.ViewData
 import java.net.SocketTimeoutException
+import kotlin.coroutines.cancellation.CancellationException
 
 class CatsPresenter(
     private val catsService: CatsService
@@ -19,28 +20,30 @@ class CatsPresenter(
 
     private val presenterScope = CoroutineScope(
         Dispatchers.Main + CoroutineName("CatsCoroutine")
-    ).coroutineContext
+    )
 
     private var _catsView: ICatsView? = null
     private var getCatFactJob: Job? = null
 
 
-    fun onInitComplete() = runBlocking {
-        getCatFactJob = launch(presenterScope) {
-            if (isActive) {
-                try {
-                    val fact = async { catsService.getCatFact() }
-                    val pic = async { catsService.getCatPic() }
-                    _catsView?.populate(ViewData(
+    fun onInitComplete() {
+        getCatFactJob = presenterScope.launch {
+            try {
+                val fact = async { catsService.getCatFact() }
+                val pic = async { catsService.getCatPic() }
+                _catsView?.populate(
+                    ViewData(
                         fact = fact.await(),
                         pic = pic.await().firstOrNull()
-                    ))
-                } catch (e: SocketTimeoutException) {
-                    _catsView?.showToast("Не удалось получить ответ от сервера")
-                } catch (e: Exception) {
-                    CrashMonitor.trackWarning()
-                    _catsView?.showToast(e.message.orEmpty())
-                }
+                    )
+                )
+            } catch (e: SocketTimeoutException) {
+                _catsView?.showToast("Не удалось получить ответ от сервера")
+            } catch (e: CancellationException) {
+                CrashMonitor.trackWarning()
+            } catch (e: Exception) {
+                CrashMonitor.trackWarning()
+                _catsView?.showToast(e.message.orEmpty())
             }
         }
     }

@@ -10,13 +10,14 @@ import kotlinx.coroutines.launch
 import otus.homework.coroutines.model.Result
 import otus.homework.coroutines.model.ViewData
 import java.net.SocketTimeoutException
+import kotlin.coroutines.cancellation.CancellationException
 
 class CatsViewModel(
     private val catsService: CatsService
 ) : ViewModel() {
 
-    private val _catsData: MutableLiveData<Result?> = MutableLiveData()
-    val catsData: LiveData<Result?>
+    private val _catsData: MutableLiveData<Result> = MutableLiveData(Result.EmptyResult)
+    val catsData: LiveData<Result>
         get() = _catsData
 
     private val coroutineExceptionHandler = CoroutineExceptionHandler { _, _ ->
@@ -35,6 +36,8 @@ class CatsViewModel(
             )
         } catch (e: SocketTimeoutException) {
             _catsData.value = Result.Error("Не удалось получить ответ от сервера")
+        } catch (e: CancellationException) {
+            CrashMonitor.trackWarning()
         } catch (e: Exception) {
             CrashMonitor.trackWarning()
             _catsData.value = Result.Error(e.message.orEmpty())
@@ -43,6 +46,6 @@ class CatsViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        _catsData.value = null
+        _catsData.value = Result.EmptyResult
     }
 }

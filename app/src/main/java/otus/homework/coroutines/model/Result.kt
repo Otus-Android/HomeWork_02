@@ -5,4 +5,6 @@ sealed class Result {
     class Success<T>(data: T): Result()
 
     class Error(message: String): Result()
+
+    object EmptyResult : Result()
 }
