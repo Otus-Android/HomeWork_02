@@ -1,20 +1,22 @@
 package otus.homework.coroutines
 
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
 
 class CatsPresenter(
-    private val catsService: CatsService,
+    private val catsFactService: CatsService,
+    private val catsPicturesService: CatsPicturesService,
     private val connectionErrorHandler: ConnectionErrorHandler
 ) {
 
     private var _catsView: ICatsView? = null
-    private var presenterScope: PresenterScope = PresenterScope()
+    private val presenterScope: PresenterScope = PresenterScope()
 
     fun onInitComplete() {
         presenterScope.launch {
             try {
-                fetchCatFact()
+                fetchAndUpdateCatInfo()
             } catch (e: SocketTimeoutException) {
                 connectionErrorHandler.onError()
             } catch(e: Exception) {
@@ -23,9 +25,23 @@ class CatsPresenter(
         }
     }
 
-    private suspend fun fetchCatFact() {
-        val fact = catsService.getCatFact()
-        _catsView?.populate(fact)
+    private suspend fun fetchAndUpdateCatInfo() {
+        val catData = loadCatData()
+        _catsView?.populate(catData)
+    }
+
+    private suspend fun loadCatData(): CatData {
+        val factRequest = presenterScope.async {
+            catsFactService.getCatFact()
+        }
+        val imageRequest = presenterScope.async {
+            catsPicturesService.getCatPicture()
+        }
+
+        val fact = factRequest.await()
+        val picture = imageRequest.await()
+
+        return CatData(fact.fact, picture.first().url)
     }
 
     fun cancelFetch() = presenterScope.cancel()

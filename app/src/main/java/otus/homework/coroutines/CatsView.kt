@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.widget.Button
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import com.squareup.picasso.Picasso
 
 class CatsView @JvmOverloads constructor(
     context: Context,
@@ -12,7 +13,7 @@ class CatsView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr), ICatsView {
 
-    var presenter :CatsPresenter? = null
+    var presenter: CatsPresenter? = null
 
     override fun onFinishInflate() {
         super.onFinishInflate()
@@ -21,12 +22,14 @@ class CatsView @JvmOverloads constructor(
         }
     }
 
-    override fun populate(fact: Fact) {
-        findViewById<TextView>(R.id.fact_textView).text = fact.fact
+    override fun populate(catData: CatData) {
+        findViewById<TextView>(R.id.fact_textView).text = catData.fact
+        val imageView = findViewById<android.widget.ImageView>(R.id.cat_image)
+        Picasso.get().load(catData.pictureUrl).into(imageView)
     }
 }
 
 interface ICatsView {
 
-    fun populate(fact: Fact)
+    fun populate(catData: CatData)
 }

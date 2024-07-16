@@ -3,20 +3,33 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:padding="16dp"
     android:layout_height="match_parent"
+    android:padding="16dp"
     tools:context=".MainActivity">
+
+    <ImageView
+        android:id="@+id/cat_image"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_max="300dp"
+        app:layout_constraintHeight_min="300dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_max="300dp"
+        app:layout_constraintWidth_min="300dp"
+        tools:src="@tools:sample/backgrounds/scenic" />
 
     <TextView
         android:id="@+id/fact_textView"
-        android:textColor="@color/black"
-        android:textSize="24sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="@color/black"
+        android:textSize="24sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/cat_image" />
 
     <Button
         android:id="@+id/button"

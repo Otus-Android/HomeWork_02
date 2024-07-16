@@ -16,7 +16,9 @@ class MainActivity : AppCompatActivity(), ConnectionErrorHandler {
         val view = layoutInflater.inflate(R.layout.activity_main, null) as CatsView
         setContentView(view)
 
-        catsPresenter = CatsPresenter(diContainer.service, this)
+        catsPresenter = CatsPresenter(
+            diContainer.catFactsService, diContainer.catPicturesService, this
+        )
         view.presenter = catsPresenter
         catsPresenter.attachView(view)
         catsPresenter.onInitComplete()
