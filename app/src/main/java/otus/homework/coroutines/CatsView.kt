@@ -4,7 +4,10 @@ import android.content.Context
 import android.util.AttributeSet
 import android.widget.Button
 import android.widget.TextView
+import android.widget.ImageView
 import androidx.constraintlayout.widget.ConstraintLayout
+import android.widget.Toast
+import com.squareup.picasso.Picasso
 
 class CatsView @JvmOverloads constructor(
     context: Context,
@@ -21,12 +24,19 @@ class CatsView @JvmOverloads constructor(
         }
     }
 
-    override fun populate(fact: Fact) {
-        findViewById<TextView>(R.id.fact_textView).text = fact.fact
+    override fun populate(catsViewData: CatsViewData) {
+        findViewById<TextView>(R.id.fact_textView).text = catsViewData.fact
+        Picasso.get().load(catsViewData.imageUrl).into( findViewById<ImageView>(R.id.image_сat) )
+    }
+
+    override fun showError(messageError: String) {
+        Toast.makeText( context, messageError, Toast.LENGTH_LONG).show()
     }
 }
 
 interface ICatsView {
 
-    fun populate(fact: Fact)
+    fun populate(catsViewData: CatsViewData)
+
+    fun showError(messageError: String)
 }
