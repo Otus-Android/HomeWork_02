@@ -14,11 +14,22 @@ class CatsView @JvmOverloads constructor(
 ) : ConstraintLayout(context, attrs, defStyleAttr), ICatsView {
 
     var presenter: CatsPresenter? = null
+    var viewModel: CatFactViewModel? = null
 
     override fun onFinishInflate() {
         super.onFinishInflate()
+
         findViewById<Button>(R.id.button).setOnClickListener {
-            presenter?.onInitComplete()
+
+            when (hwTaskFeature) {
+                FeatureFlag.HW_TASK_1_CAT_PRESENTER -> {
+                    presenter?.onInitComplete()
+                }
+
+                FeatureFlag.HW_TASK_3_CAT_VIEW_MODEL -> {
+                    viewModel?.fetchCatData()
+                }
+            }
         }
     }
 

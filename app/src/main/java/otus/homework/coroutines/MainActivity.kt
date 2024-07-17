@@ -1,14 +1,20 @@
 package otus.homework.coroutines
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import java.net.SocketTimeoutException
 
 class MainActivity : AppCompatActivity(), ConnectionErrorHandler {
 
     lateinit var catsPresenter: CatsPresenter
 
     private val diContainer = DiContainer()
+
+    private val viewModel: CatFactViewModel by viewModels<CatFactViewModel> {
+        CatsViewModelFactory(diContainer.catFactsService, diContainer.catPicturesService)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,9 +25,34 @@ class MainActivity : AppCompatActivity(), ConnectionErrorHandler {
         catsPresenter = CatsPresenter(
             diContainer.catFactsService, diContainer.catPicturesService, this
         )
-        view.presenter = catsPresenter
-        catsPresenter.attachView(view)
-        catsPresenter.onInitComplete()
+
+        when (hwTaskFeature) {
+            FeatureFlag.HW_TASK_1_CAT_PRESENTER -> {
+                view.presenter = catsPresenter
+                catsPresenter.attachView(view)
+                catsPresenter.onInitComplete()
+            }
+
+            FeatureFlag.HW_TASK_3_CAT_VIEW_MODEL -> {
+                view.viewModel = viewModel
+                observeCatsData(view)
+                viewModel.fetchCatData()
+            }
+        }
+    }
+
+    private fun observeCatsData(view: CatsView) {
+        viewModel.catsLiveData.observe(this) { result ->
+            when (result) {
+                is Result.Success -> view.populate(result.data)
+                is Result.Error -> handleError(result.exception)
+            }
+        }
+    }
+
+    private fun handleError(exception: Throwable) = when (exception) {
+        is SocketTimeoutException -> onError()
+        else -> CrashMonitor.trackWarning(exception.message)
     }
 
     override fun onStop() {
@@ -29,7 +60,11 @@ class MainActivity : AppCompatActivity(), ConnectionErrorHandler {
             catsPresenter.detachView()
         }
         super.onStop()
-        catsPresenter.cancelFetch()
+
+        when (hwTaskFeature) {
+            FeatureFlag.HW_TASK_3_CAT_VIEW_MODEL -> viewModel.cancelFetch()
+            FeatureFlag.HW_TASK_1_CAT_PRESENTER -> catsPresenter.cancelFetch()
+        }
     }
 
     override fun onError() {

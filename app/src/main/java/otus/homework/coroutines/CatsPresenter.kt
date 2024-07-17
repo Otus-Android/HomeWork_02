@@ -20,7 +20,7 @@ class CatsPresenter(
             } catch (e: SocketTimeoutException) {
                 connectionErrorHandler.onError()
             } catch(e: Exception) {
-                CrashMonitor.trackWarning(e.message ?: UNKNOWN_ERROR)
+                CrashMonitor.trackWarning(e.message)
             }
         }
     }
@@ -52,9 +52,5 @@ class CatsPresenter(
 
     fun detachView() {
         _catsView = null
-    }
-
-    companion object {
-        private const val UNKNOWN_ERROR = "Unknown error"
     }
 }
