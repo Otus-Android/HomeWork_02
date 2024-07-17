@@ -1,28 +1,44 @@
 package otus.homework.coroutines
 
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.Deferred
 
 class CatsPresenter(
-    private val catsService: CatsService
+    private val catsService: CatsService,
+    private val catsImageLinkService: CatsImageLinkService
 ) {
 
     private var _catsView: ICatsView? = null
+    protected val job = Job()
+    protected val scope = CoroutineScope(Dispatchers.Main+job+CoroutineName("CatsCoroutine"))
 
     fun onInitComplete() {
-        catsService.getCatFact().enqueue(object : Callback<Fact> {
-
-            override fun onResponse(call: Call<Fact>, response: Response<Fact>) {
-                if (response.isSuccessful && response.body() != null) {
-                    _catsView?.populate(response.body()!!)
+        scope.launch {
+            try {
+                val fact: Deferred<Fact> = async(Dispatchers.IO) {
+                    catsService.getCatFact()
                 }
+                val imgUrl: Deferred<CatsImageLink> = async(Dispatchers.IO) {
+                    catsImageLinkService.getCatImageLink().first()
+                }
+                _catsView?.populate(CatsViewData(fact.await().fact,imgUrl.await().url))
             }
-
-            override fun onFailure(call: Call<Fact>, t: Throwable) {
+            catch(error :java.net.SocketTimeoutException) {
+                _catsView?.showError("Не удалось получить ответ от сервера")
+            }
+            catch( error : Exception) {
                 CrashMonitor.trackWarning()
+                _catsView?.showError(error.message?:"Ошибка")
+                /*if(error is CancellationException)
+                    throw error*/
             }
-        })
+        }
     }
 
     fun attachView(catsView: ICatsView) {
@@ -30,6 +46,7 @@ class CatsPresenter(
     }
 
     fun detachView() {
+        job.cancel()
         _catsView = null
     }
 }
