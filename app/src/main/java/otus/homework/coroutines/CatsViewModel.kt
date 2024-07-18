@@ -41,7 +41,7 @@ class CatsViewModel(
             val imgUrl: Deferred<String> = async(Dispatchers.IO) {
                 catsImageLinkService.getCatImageLink().first().url
             }
-            _catsLiveData.postValue( Result.Success( CatsViewData(fact.await(), imgUrl.await()) ) )
+            _catsLiveData.value = Result.Success( CatsViewData(fact.await(), imgUrl.await()) )
         }
     }
 
