@@ -8,13 +8,14 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
     private val diContainer = DiContainer()
 
-    private val catsPresenter = CatsPresenter(diContainer.service)
+    private val catsPresenter = CatsPresenter(diContainer.service, diContainer.service2)
 
     private val presenterScope = CoroutineScope(Dispatchers.Main + CoroutineName("CatsCoroutine"))
 
@@ -44,9 +45,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun populateFact(view: CatsView) {
         jobPopulateCatsFacts = presenterScope.launch(coroutineExceptionHandler) {
-            catsPresenter.onPopulateFact().collect { fact ->
-                view.populate(fact)
-            }
+            catsPresenter.populateFact()
+                .combine(catsPresenter.populateRandomImage()) { fact, image ->
+                    Pair(fact.fact, image.url)
+                }
+                .collect { (fact, imageUrl) -> view.populate(fact, imageUrl) }
         }
     }
 
