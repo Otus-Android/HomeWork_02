@@ -1,10 +1,10 @@
 package otus.homework.coroutines
 
-import retrofit2.Call
+import kotlinx.coroutines.flow.Flow
 import retrofit2.http.GET
 
 interface CatsService {
 
     @GET("fact")
-    fun getCatFact() : Call<Fact>
+    suspend fun getCatFact(): Flow<Fact>
 }
