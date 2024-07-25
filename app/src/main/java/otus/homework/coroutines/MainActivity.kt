@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import java.lang.ref.WeakReference
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,7 +18,7 @@ class MainActivity : AppCompatActivity() {
         CatsViewModelFactory(
             catFactService = diContainer.catFactService,
             catImageService = diContainer.catImageService,
-            isDataLoadedCallbaсk = WeakReference(isDataLoadedCallback())
+            isDataLoadedCallbaсk = isDataLoadedCallback()
         )
     }
 

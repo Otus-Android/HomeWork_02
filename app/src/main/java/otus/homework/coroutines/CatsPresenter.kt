@@ -20,27 +20,10 @@ class CatsPresenter(
     private val scope: CoroutineScope = PresenterScope(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val jobs: MutableMap<JobKey, Job> = mutableMapOf(),
-    /**
-     * Колбэк для установки флага через корутину, что данные загружены.
-     * Если флаг == true, то данные больше не будут загружаться в onStart().
-     * Флаг нужен, чтобы, если приложение ушло в onStop() до загрузки данных,
-     * (флаг == false), а корутины отменились,
-     * то приложение в onStart() попыталось загрузить данные еще раз,
-     * а пользователь не остался с пустым экраном.
-     * Должно быть только параметром, не переменной.
-     * Локальная переменная создается дальше, чтобы ее можно было занулить
-     */
-    isDataLoadedCallbaсk: (Boolean) -> Unit
+    private val isDataLoadedCallbaсk: (Boolean) -> Unit
 ) {
 
     private var _catsView: ICatsView? = null
-
-    /**
-     * Локальная копия коллбэка для того,
-     * чтобы занулить ее при необходимости
-     * и минимизировать шанс утечки
-     * */
-    private var isDataLoadedCallback: ((Boolean) -> Unit)? = isDataLoadedCallbaсk
 
     fun onInitComplete() {
         /** Если корутина уже запущена, то ничего не делаем */
@@ -86,7 +69,7 @@ class CatsPresenter(
                  * работает в зависимости от результата
                  */
                 _catsView?.populate(result)
-                isDataLoadedCallback?.invoke(true)
+                isDataLoadedCallbaсk(true)
             }
         }
     }
@@ -102,6 +85,5 @@ class CatsPresenter(
 
     fun detachView() {
         _catsView = null
-        isDataLoadedCallback = null
     }
 }

@@ -11,7 +11,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
-import java.lang.ref.WeakReference
 import java.net.SocketTimeoutException
 import kotlin.coroutines.CoroutineContext
 
@@ -23,28 +22,11 @@ class CatsViewModel(
     private val catImageService: CatImageService,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val jobs: MutableMap<JobKey, Job> = mutableMapOf(),
-    /**
-     * Колбэк для установки флага через корутину, что данные загружены.
-     * Если флаг == true, то данные больше не будут загружаться в onStart().
-     * Флаг нужен, чтобы, если приложение ушло в onStop() до загрузки данных,
-     * (флаг == false), а корутины отменились,
-     * то приложение в onStart() попыталось загрузить данные еще раз,
-     * а пользователь не остался с пустым экраном.
-     * Должно быть только параметром, не переменной.
-     * Локальная переменная создается дальше, чтобы ее можно было занулить
-     */
-    isDataLoadedCallbaсk: WeakReference<(Boolean) -> Unit>
+    private val isDataLoadedCallbaсk: (Boolean) -> Unit
 ) : ViewModel() {
 
     private var _catsView: ICatsView? = null
     private var isLogsEnabled = true
-
-    /**
-     * Локальная копия коллбэка для того,
-     * чтобы занулить ее при необходимости
-     * и минимизировать шанс утечки
-     * */
-    private var isDataLoadedCallback: ((Boolean) -> Unit)? = isDataLoadedCallbaсk.get()
 
     /**
      * Добавляю только нужное,
@@ -100,7 +82,7 @@ class CatsViewModel(
                  * работает в зависимости от результата
                  */
                 _catsView?.populate(result)
-                isDataLoadedCallback?.invoke(true)
+                isDataLoadedCallbaсk(true)
             }
         }
     }
@@ -116,14 +98,13 @@ class CatsViewModel(
 
     fun detachView() {
         _catsView = null
-        isDataLoadedCallback = null
     }
 }
 
 class CatsViewModelFactory(
     private val catFactService: CatFactService,
     private val catImageService: CatImageService,
-    private val isDataLoadedCallbaсk: WeakReference<(Boolean) -> Unit>
+    private val isDataLoadedCallbaсk: (Boolean) -> Unit
 ) :
     ViewModelProvider.NewInstanceFactory() {
 
