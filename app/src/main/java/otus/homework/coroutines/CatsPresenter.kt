@@ -5,7 +5,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
 
@@ -61,10 +60,6 @@ class CatsPresenter(
             _catsView?.populate(result)
             isDataLoadedCallbaсk(true)
         }
-    }
-
-    fun cancelAllCoroutines() {
-        scope.coroutineContext.cancelChildren()
     }
 
     fun attachView(catsView: ICatsView) {

@@ -74,12 +74,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         if (isViewModel) {
-            catsViewModel.cancelAllCoroutines()
             if (isFinishing) {
                 catsViewModel.detachView()
             }
         } else {
-            catsPresenter.cancelAllCoroutines()
             if (isFinishing) {
                 catsPresenter.detachView()
             }
