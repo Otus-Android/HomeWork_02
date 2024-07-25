@@ -7,11 +7,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 import java.net.SocketTimeoutException
 
 private const val PRESENTER_CAT_JOB_KEY = "CatJob"
-private const val PRESENTER_AWAIT_TIMEOUT = 20000L
 
 class CatsPresenter(
     private val catFactService: CatFactService,
@@ -32,39 +30,36 @@ class CatsPresenter(
                 catImageService.getCatImage()
             }
 
-            /** Timeout, чтобы не ждать ответа бесконечно */
-            withTimeout(PRESENTER_AWAIT_TIMEOUT) {
-                val result = try {
-                    /** Тестовое пробрасывание  SocketTimeoutException для проверки */
+            val result = try {
+                /** Тестовое пробрасывание  SocketTimeoutException для проверки */
 //                    throw SocketTimeoutException()
 
-                    val factResponse = factResponseDeffered.await()
-                    val imageResponse = imageResponseDeffered.await()
-                    val imageResponseFirstElement = imageResponse.firstOrNull()
-                        ?: return@withTimeout
+                val factResponse = factResponseDeffered.await()
+                val imageResponse = imageResponseDeffered.await()
+                val imageResponseFirstElement = imageResponse.firstOrNull()
+                    ?: return@launch
 
-                    val cat = mapServerResponseToCat(
-                        factResponse = factResponse,
-                        imageResponse = imageResponseFirstElement
-                    )
+                val cat = mapServerResponseToCat(
+                    factResponse = factResponse,
+                    imageResponse = imageResponseFirstElement
+                )
 
-                    Result.Success<Cat>(cat)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: SocketTimeoutException) {
-                    Result.Error.SocketError
-                } catch (e: Throwable) {
-                    CrashMonitor.trackWarning(e)
-                    Result.Error.OtherError(e)
-                }
-
-                /**
-                 * Логика показа Тоста находится внутри View,
-                 * работает в зависимости от результата
-                 */
-                _catsView?.populate(result)
-                isDataLoadedCallbaсk(true)
+                Result.Success<Cat>(cat)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: SocketTimeoutException) {
+                Result.Error.SocketError
+            } catch (e: Throwable) {
+                CrashMonitor.trackWarning(e)
+                Result.Error.OtherError(e)
             }
+
+            /**
+             * Логика показа Тоста находится внутри View,
+             * работает в зависимости от результата
+             */
+            _catsView?.populate(result)
+            isDataLoadedCallbaсk(true)
         }
     }
 
