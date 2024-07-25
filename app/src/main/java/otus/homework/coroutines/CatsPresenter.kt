@@ -4,7 +4,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
@@ -19,18 +18,13 @@ class CatsPresenter(
     private val catImageService: CatImageService,
     private val scope: CoroutineScope = PresenterScope(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val jobs: MutableMap<JobKey, Job> = mutableMapOf(),
     private val isDataLoadedCallbaсk: (Boolean) -> Unit
 ) {
 
     private var _catsView: ICatsView? = null
 
     fun onInitComplete() {
-        /** Если корутина уже запущена, то ничего не делаем */
-        if (jobs.getOrDefault(PRESENTER_CAT_JOB_KEY, null)?.isActive == true) return
-
-        /** Добавляем Job в мапу по ключу */
-        jobs[PRESENTER_CAT_JOB_KEY] = scope.launch {
+        scope.launch {
             val factResponseDeffered = scope.async(ioDispatcher) {
                 catFactService.getCatFact()
             }
@@ -76,7 +70,6 @@ class CatsPresenter(
 
     fun cancelAllCoroutines() {
         scope.coroutineContext.cancelChildren()
-        jobs.clear()
     }
 
     fun attachView(catsView: ICatsView) {

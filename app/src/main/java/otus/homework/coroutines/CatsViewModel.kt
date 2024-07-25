@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
@@ -14,14 +13,12 @@ import kotlinx.coroutines.withTimeout
 import java.net.SocketTimeoutException
 import kotlin.coroutines.CoroutineContext
 
-private const val VIEW_MODEL_CAT_JOB_KEY = "CatJob"
 private const val VIEW_MODEL_AWAIT_TIMEOUT = 20000L
 
 class CatsViewModel(
     private val catFactService: CatFactService,
     private val catImageService: CatImageService,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val jobs: MutableMap<JobKey, Job> = mutableMapOf(),
     private val isDataLoadedCallbaсk: (Boolean) -> Unit
 ) : ViewModel() {
 
@@ -37,11 +34,7 @@ class CatsViewModel(
     }
 
     fun onInitComplete() {
-        /** Если корутина уже запущена, то ничего не делаем */
-        if (jobs.getOrDefault(VIEW_MODEL_CAT_JOB_KEY, null)?.isActive == true) return
-
-        /** Добавляем Job в мапу по ключу */
-        jobs[VIEW_MODEL_CAT_JOB_KEY] = viewModelScope.launch(scopeContext) {
+        viewModelScope.launch(scopeContext) {
             val factResponseDeffered =
                 viewModelScope.async(ioDispatcher) {
                     catFactService.getCatFact()
@@ -89,7 +82,6 @@ class CatsViewModel(
 
     fun cancelAllCoroutines() {
         viewModelScope.coroutineContext.cancelChildren()
-        jobs.clear()
     }
 
     fun attachView(catsView: ICatsView) {
