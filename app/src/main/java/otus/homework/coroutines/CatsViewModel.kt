@@ -10,7 +10,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
-import kotlin.coroutines.CoroutineContext
 
 class CatsViewModel(
     private val catFactService: CatFactService,
@@ -22,16 +21,8 @@ class CatsViewModel(
     private var _catsView: ICatsView? = null
     private var isLogsEnabled = true
 
-    /**
-     * Добавляю только нужное,
-     * так как у ViewModelScope и так диспетчер Main.immediate и SupervisorJob
-     */
-    private val scopeContext: CoroutineContext by lazy {
-        getCatsExceptionHandler() + getCatsCoroutineName()
-    }
-
     fun onInitComplete() {
-        viewModelScope.launch(scopeContext) {
+        viewModelScope.launch(getCoroutineContext()) {
             val factResponseDeffered =
                 viewModelScope.async(ioDispatcher) {
                     catFactService.getCatFact()

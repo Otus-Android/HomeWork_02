@@ -7,8 +7,7 @@ import kotlin.coroutines.CoroutineContext
 
 class PresenterScope : CoroutineScope {
     override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main.immediate +
-                getCatsCoroutineName() +
-                getCatsExceptionHandler() +
+        get() = getCoroutineContext() +
+                Dispatchers.Main.immediate +
                 SupervisorJob()
 }
