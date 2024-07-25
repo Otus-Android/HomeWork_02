@@ -62,9 +62,7 @@ class CatsPresenter(
 //                    throw SocketTimeoutException()
 
                     val factResponse = factResponseDeffered.await()
-                        ?: return@withTimeout
                     val imageResponse = imageResponseDeffered.await()
-                        ?: return@withTimeout
                     val imageResponseFirstElement = imageResponse.firstOrNull()
                         ?: return@withTimeout
 

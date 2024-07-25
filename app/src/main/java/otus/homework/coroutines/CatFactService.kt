@@ -5,5 +5,5 @@ import retrofit2.http.GET
 interface CatFactService {
 
     @GET("fact")
-    suspend fun getCatFact(): FactResponse?
+    suspend fun getCatFact(): FactResponse
 }
