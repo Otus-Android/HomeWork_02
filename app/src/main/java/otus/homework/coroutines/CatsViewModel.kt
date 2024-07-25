@@ -1,33 +1,35 @@
 package otus.homework.coroutines
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
 
-private const val PRESENTER_CAT_JOB_KEY = "CatJob"
-
-class CatsPresenter(
+class CatsViewModel(
     private val catFactService: CatFactService,
     private val catImageService: CatImageService,
-    private val scope: CoroutineScope = PresenterScope(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val isDataLoadedCallbaсk: (Boolean) -> Unit
-) {
+) : ViewModel() {
 
     private var _catsView: ICatsView? = null
+    private var isLogsEnabled = true
 
     fun onInitComplete() {
-        scope.launch {
-            val factResponseDeffered = scope.async(ioDispatcher) {
-                catFactService.getCatFact()
-            }
-            val imageResponseDeffered = scope.async(ioDispatcher) {
-                catImageService.getCatImage()
-            }
+        viewModelScope.launch(getCoroutineContext()) {
+            val factResponseDeffered =
+                viewModelScope.async(ioDispatcher) {
+                    catFactService.getCatFact()
+                }
+            val imageResponseDeffered =
+                viewModelScope.async(ioDispatcher) {
+                    catImageService.getCatImage()
+                }
 
             val result = try {
                 /** Тестовое пробрасывание  SocketTimeoutException для проверки */
@@ -69,4 +71,19 @@ class CatsPresenter(
     fun detachView() {
         _catsView = null
     }
+}
+
+class CatsViewModelFactory(
+    private val catFactService: CatFactService,
+    private val catImageService: CatImageService,
+    private val isDataLoadedCallbaсk: (Boolean) -> Unit
+) :
+    ViewModelProvider.NewInstanceFactory() {
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T = CatsViewModel(
+        catFactService = catFactService,
+        catImageService = catImageService,
+        isDataLoadedCallbaсk = isDataLoadedCallbaсk,
+    ) as T
 }
