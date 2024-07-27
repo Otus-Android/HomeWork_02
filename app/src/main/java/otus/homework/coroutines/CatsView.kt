@@ -5,8 +5,10 @@ import android.util.AttributeSet
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.squareup.picasso.Picasso
+import com.squareup.picasso.Transformation
 
 class CatsView @JvmOverloads constructor(
     context: Context,
@@ -14,23 +16,30 @@ class CatsView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr), ICatsView {
 
-    var clickListener: (() -> Unit)? = null
+    var presenter: CatsPresenter? = null
+    var viewModel: CatsViewModel? = null
 
     override fun onFinishInflate() {
         super.onFinishInflate()
         findViewById<Button>(R.id.button).setOnClickListener {
-            clickListener?.invoke()
+//            presenter?.populateData()
+            viewModel?.populateData()
         }
     }
 
-    override fun populate(fact: String, imageUrl: String) {
-        findViewById<TextView>(R.id.fact_textView).text = fact
+    override fun populate(cat: CatModel) {
+        findViewById<TextView>(R.id.fact_textView).text = cat.fact
 
-        Picasso.get().load(imageUrl).into(findViewById<ImageView>(R.id.image))
+        Picasso.get().load(cat.imageUrl).into(findViewById<ImageView>(R.id.image))
+    }
+
+    override fun showError(message: String?) {
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
     }
 }
 
 interface ICatsView {
 
-    fun populate(fact: String, imageUrl: String)
+    fun populate(cat: CatModel)
+    fun showError(message: String?)
 }
