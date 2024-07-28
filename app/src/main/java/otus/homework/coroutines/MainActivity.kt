@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import java.net.SocketTimeoutException
 
 class MainActivity : AppCompatActivity(), ConnectionErrorHandler {
 
@@ -45,14 +44,10 @@ class MainActivity : AppCompatActivity(), ConnectionErrorHandler {
         viewModel.catsLiveData.observe(this) { result ->
             when (result) {
                 is Result.Success -> view.populate(result.data)
-                is Result.Error -> handleError(result.exception)
+                is Result.Error.ServerError -> onError()
+                is Result.Error.GeneralError -> CrashMonitor.trackWarning(result.exception.message)
             }
         }
-    }
-
-    private fun handleError(exception: Throwable) = when (exception) {
-        is SocketTimeoutException -> onError()
-        else -> CrashMonitor.trackWarning(exception.message)
     }
 
     override fun onStop() {

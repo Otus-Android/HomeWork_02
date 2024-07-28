@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import java.net.SocketTimeoutException
 
 class CatFactViewModel(
     private val catsFactService: CatsService,
@@ -19,7 +20,10 @@ class CatFactViewModel(
     private var fetchJob: Job? = null
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
-        _catsLiveData.value = Result.Error(throwable)
+        when (throwable) {
+            is SocketTimeoutException -> _catsLiveData.value = Result.Error.ServerError(throwable)
+            else -> _catsLiveData.value = Result.Error.GeneralError(throwable)
+        }
     }
 
     fun fetchCatData() {
