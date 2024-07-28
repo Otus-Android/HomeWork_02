@@ -42,8 +42,4 @@ class CatFactViewModel(
         fetchJob = null
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        cancelFetch()
-    }
 }
