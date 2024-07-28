@@ -34,7 +34,6 @@ class MainActivity : AppCompatActivity() {
                 is Result.Error   ->    view.showError(result.errorMessage)
             }
         }
-
     }
 
     override fun onStop() {
@@ -43,7 +42,7 @@ class MainActivity : AppCompatActivity() {
         }
         super.onStop()
     }
-	private fun buidlPresenter() {
+	private fun buildPresenter() {
 		val view = layoutInflater.inflate(R.layout.activity_main, null) as CatsView
 		catsPresenter = CatsPresenter(diContainer.service, diContainer.serviceCatsImageLink)
 		view.presenter = catsPresenter

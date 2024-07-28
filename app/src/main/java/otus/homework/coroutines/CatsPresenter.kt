@@ -5,9 +5,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.Deferred
+import kotlin.coroutines.cancellation.CancellationException
 
 class CatsPresenter(
     private val catsService: CatsService,
@@ -21,12 +21,8 @@ class CatsPresenter(
     fun onInitComplete() {
         scope.launch {
             try {
-                val fact: Deferred<Fact> = async(Dispatchers.IO) {
-                    catsService.getCatFact()
-                }
-                val imgUrl: Deferred<CatsImageLink> = async(Dispatchers.IO) {
-                    catsImageLinkService.getCatImageLink().first()
-                }
+                val fact: Deferred<Fact> = async { catsService.getCatFact() }
+                val imgUrl: Deferred<CatsImageLink> = async { catsImageLinkService.getCatImageLink().first() }
                 _catsView?.populate(CatsViewData(fact.await().fact,imgUrl.await().url))
             }
             catch(error :java.net.SocketTimeoutException) {
@@ -35,8 +31,8 @@ class CatsPresenter(
             catch( error : Exception) {
                 CrashMonitor.trackWarning()
                 _catsView?.showError(error.message?:"Ошибка")
-                /*if(error is CancellationException)
-                    throw error*/
+                if(error is CancellationException)
+                    throw error
             }
         }
     }

@@ -7,9 +7,7 @@ import kotlinx.coroutines.launch
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.CoroutineExceptionHandler
 
 class CatsViewModel(
@@ -21,13 +19,10 @@ class CatsViewModel(
     private val crashMonitor = CrashMonitor
     private val coroutineExceptionHandler = CoroutineExceptionHandler { _, throwable ->
         crashMonitor.trackWarning()
-        _catsLiveData.postValue( when(throwable) {
+        _catsLiveData.value = when(throwable) {
             is java.net.SocketTimeoutException -> Result.Error("Не удалось получить ответ от сервера")
-            else -> {
-                crashMonitor.trackWarning()
-                Result.Error(throwable.message?:"Ошибка получения данных")
-            }
-        })
+            else -> Result.Error(throwable.message?:"Ошибка получения данных")
+        }
     }
 
     init {
@@ -36,18 +31,10 @@ class CatsViewModel(
 
     fun getCatsViewData() {
         viewModelScope.launch(coroutineExceptionHandler) {
-            val fact: Deferred<String> = async(Dispatchers.IO)
-                { catsService.getCatFact().fact }
-            val imgUrl: Deferred<String> = async(Dispatchers.IO) {
-                catsImageLinkService.getCatImageLink().first().url
-            }
+            val fact: Deferred<String> = async { catsService.getCatFact().fact }
+            val imgUrl: Deferred<String> = async { catsImageLinkService.getCatImageLink().first().url }
             _catsLiveData.value = Result.Success( CatsViewData(fact.await(), imgUrl.await()) )
         }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        viewModelScope.cancel()
     }
 }
 
