@@ -31,9 +31,11 @@ class CatsViewModel(
             val pictures = async { catsService.getRandomPictures() }
 
             _catsView?.populate(
-                catInfo = CatInfo(
-                    fact = fact.await(),
-                    url = pictures.await().firstOrNull()
+                Result.Success<CatInfo>(
+                    CatInfo(
+                        fact = fact.await(),
+                        url = pictures.await().firstOrNull()
+                    )
                 )
             )
         }

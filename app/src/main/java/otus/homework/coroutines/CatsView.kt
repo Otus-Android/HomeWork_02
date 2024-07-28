@@ -8,6 +8,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.squareup.picasso.Picasso
+import java.net.SocketTimeoutException
 
 class CatsView @JvmOverloads constructor(
     context: Context,
@@ -24,11 +25,27 @@ class CatsView @JvmOverloads constructor(
         }
     }
 
-    override fun populate(catInfo: CatInfo) {
-        findViewById<TextView>(R.id.fact_textView).text = catInfo.fact.fact
-        Picasso.with(context)
-            .load(catInfo.url)
-            .into(findViewById<ImageView>(R.id.fact_textView))
+    override fun populate(result: Result) {
+        when (result) {
+            is Result.Success<*> -> {
+                findViewById<TextView>(R.id.fact_textView).text = result.catInfo.fact.fact
+                Picasso.with(context)
+                    .load(result.catInfo.url)
+                    .into(findViewById<ImageView>(R.id.fact_textView))
+            }
+
+            is Result.Error -> {
+                when (result.error) {
+                    is SocketTimeoutException -> {
+                        showToast("Не удалось получить ответ от сервером")
+                    }
+
+                    else -> {
+                        showToast(result.error.message.toString())
+                    }
+                }
+            }
+        }
     }
 
     override fun showToast(text: String) {
@@ -38,7 +55,7 @@ class CatsView @JvmOverloads constructor(
 
 interface ICatsView {
 
-    fun populate(catInfo: CatInfo)
+    fun populate(result: Result)
 
     fun showToast(text: String)
 }
