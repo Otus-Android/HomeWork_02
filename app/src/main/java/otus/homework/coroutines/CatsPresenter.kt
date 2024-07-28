@@ -4,6 +4,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
+import kotlin.coroutines.cancellation.CancellationException
 
 class CatsPresenter(
     private val catsFactService: CatsService,
@@ -20,6 +21,8 @@ class CatsPresenter(
                 fetchAndUpdateCatInfo()
             } catch (e: SocketTimeoutException) {
                 connectionErrorHandler.onError()
+            } catch (e: CancellationException) {
+                throw e
             } catch(e: Exception) {
                 CrashMonitor.trackWarning(e.message)
             }
