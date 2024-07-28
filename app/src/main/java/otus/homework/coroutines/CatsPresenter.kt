@@ -1,6 +1,7 @@
 package otus.homework.coroutines
 
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
 
