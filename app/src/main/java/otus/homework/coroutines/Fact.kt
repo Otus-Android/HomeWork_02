@@ -8,3 +8,19 @@ data class Fact(
 	@field:SerializedName("length")
 	val length: Int
 )
+
+data class ModelFact(
+	val fact: Fact?,
+	val imageCat: ImageCat?
+)
+
+data class ImageCat(
+	@field:SerializedName("id")
+	val id: String,
+	@field:SerializedName("url")
+	val url: String,
+	@field:SerializedName("width")
+	val width: Int,
+	@field:SerializedName("height")
+	val height: Int
+)

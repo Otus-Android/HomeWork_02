@@ -12,8 +12,15 @@ android {
         targetSdkVersion 34
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    packagingOptions {
+        resources.excludes.add("META-INF/*")
+        excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        excludes += "/META-INF/gradle/incremental.annotation.processors"
     }
 
     buildTypes {
@@ -41,4 +48,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'com.squareup.picasso:picasso:2.71828'
+    implementation "com.squareup.okhttp3:logging-interceptor:4.11.0"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0"
+    implementation 'androidx.activity:activity-ktx:1.8.2'
 }
