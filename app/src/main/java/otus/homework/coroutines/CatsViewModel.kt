@@ -12,22 +12,27 @@ class CatsViewModel(
     private val apiService: ApiService,
     private val onShowErrorMessage: (Throwable) -> Unit
 ) : ViewModel(), ICatsPresenter {
+
     override var _catsView: ICatsView? = null
     override var job: Job? = null
 
     override fun onInitComplete() {
-        val handler = CoroutineExceptionHandler { _, throwable -> showError(throwable) }
+        viewModelScope.launch {
+            try {
+                val factResult = async { apiService.serviceCatFact.getCatFact().fact }
+                val imageResult =
+                    async { apiService.serviceCatImage.getCatImage().firstOrNull()?.url.orEmpty() }
+                val catData =
+                    CatData(
+                        fact = factResult.await(),
+                        imageUrl = imageResult.await()
+                    )
 
-        viewModelScope.launch(handler) {
-            val factResult = async { apiService.serviceCatFact.getCatFact().fact }
-            val imageResult = async { apiService.serviceCatImage.getCatImage().firstOrNull()?.url.orEmpty() }
-            val catData =
-                CatData(
-                    fact = factResult.await(),
-                    imageUrl = imageResult.await()
-                )
-
-            _catsView?.populate(Result.Success(catData))
+                _catsView?.populate(Result.Success(catData))
+            }
+            catch (e : Exception){
+                showError(e)
+            }
         }
     }
 
