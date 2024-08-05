@@ -30,13 +30,11 @@ class CatsViewModel(
             try {
                 coroutineScope {
                     val fact = async<Fact> {
-                        val response = catsService.getCatFact()
-                        response.body()!!
+                        catsService.getCatFact()
                     }
 
                     val picture = async<Picture> {
-                        val response = catsPicturesService.getCatPicture()
-                        response.body()!!
+                        catsPicturesService.getCatPicture()
                     }
 
                     val catModel = Success(fact.await(), picture.await())
@@ -49,11 +47,6 @@ class CatsViewModel(
                 _catsLiveData.value = Error(e.message)
             }
         }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        viewModelScope.coroutineContext.cancelChildren()
     }
 }
 

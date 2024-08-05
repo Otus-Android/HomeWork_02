@@ -1,6 +1,7 @@
 package otus.homework.coroutines
 
 import android.content.Context
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,20 +22,20 @@ class CatsPresenter(
     fun onInitComplete() {
         _presenterScope.launch {
             try {
-                val fact = _presenterScope.async<Fact> {
-                    val response = catsService.getCatFact()
-                    response.body()!!
+                val fact = async<Fact> {
+                    catsService.getCatFact()
                 }
 
-                val picture = _presenterScope.async<Picture> {
-                    val response = catsPicturesService.getCatPicture()
-                    response.body()!!
+                val picture = async<Picture> {
+                    catsPicturesService.getCatPicture()
                 }
 
                 val catModel = CatsModel(fact.await(), picture.await())
                 _catsView?.populate(catModel)
             } catch (e : SocketTimeoutException) {
                 _catsView?.toast(context.resources.getString(R.string.timeout_error))
+            } catch (e : CancellationException) {
+                throw e
             } catch (e : Exception) {
                 CrashMonitor.trackWarning(e)
                 _catsView?.toast(e.message)

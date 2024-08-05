@@ -7,5 +7,5 @@ interface CatsPicturesService {
 
 //    @GET("meow")
     @GET("floof")
-    suspend fun getCatPicture() : Response<Picture>
+    suspend fun getCatPicture() : Picture
 }
