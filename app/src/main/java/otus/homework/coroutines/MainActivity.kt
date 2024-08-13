@@ -2,10 +2,13 @@ package otus.homework.coroutines
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
+import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var catsPresenter: CatsPresenter
+    //lateinit var catsPresenter: CatsPresenter
+    lateinit var catsViewModel: CatsViewModel
 
     private val diContainer = DiContainer()
 
@@ -15,16 +18,25 @@ class MainActivity : AppCompatActivity() {
         val view = layoutInflater.inflate(R.layout.activity_main, null) as CatsView
         setContentView(view)
 
-        catsPresenter = CatsPresenter(diContainer.service)
-        view.presenter = catsPresenter
-        catsPresenter.attachView(view)
-        catsPresenter.onInitComplete()
+        //catsPresenter = CatsPresenter(diContainer.service, diContainer.serviceImage)
+        //view.presenter = catsPresenter
+        //catsPresenter.attachView(view)
+        //catsPresenter.onInitComplete()
+        catsViewModel = CatsViewModel(diContainer.service, diContainer.serviceImage)
+        view.viewModel = catsViewModel
+        catsViewModel.catsLiveData.observe(this) { result ->
+            when (result) {
+                is Success -> view.populate(result.catsModel)
+                is Error -> Toast.makeText(this, result.message, Toast.LENGTH_LONG).show()
+            }
+        }
+        catsViewModel.onInitComplete()
     }
 
-    override fun onStop() {
+    /*override fun onStop() {
         if (isFinishing) {
             catsPresenter.detachView()
         }
         super.onStop()
-    }
+    }*/
 }
