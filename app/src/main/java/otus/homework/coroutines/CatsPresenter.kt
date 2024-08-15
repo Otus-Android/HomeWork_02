@@ -5,14 +5,13 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
-import kotlin.coroutines.CoroutineContext
 
 class CatsPresenter(
-    private val catsService: CatsService,
+    private val catFactsService: CatFactsService,
+    private val catImageService: CatImageService
 ) {
 
     private var _catsView: ICatsView? = null
@@ -23,8 +22,9 @@ class CatsPresenter(
     fun onInitComplete() {
         job = presenterScope.launch {
             try {
-                val catFact = async { catsService.getCatFact() }
-                _catsView?.populate(catFact.await())
+                val catFact = async { catFactsService.getCatFact() }
+                val catImage = async { catImageService.getCatImages().first() }
+                _catsView?.populate(Cat(catFact.await(),catImage.await()))
             } catch (e: Exception) {
                 when (e) {
                     is CancellationException -> return@launch
