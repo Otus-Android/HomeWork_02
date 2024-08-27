@@ -18,22 +18,22 @@ class MainActivity : AppCompatActivity() {
         val view = layoutInflater.inflate(R.layout.activity_main, null) as CatsView
         setContentView(view)
 
-//        catsPresenter = CatsPresenter(diContainer.service)
-//        view.setPresenter(catsPresenter)
-//        catsPresenter?.attachView(view)
-//        catsPresenter?.onInitComplete()
+        catsPresenter = CatsPresenter(diContainer.service)
+        view.setPresenter(catsPresenter)
+        catsPresenter?.attachView(view)
+        catsPresenter?.onInitComplete()
 
-        view.setViewModel(catsViewModel)
+//        view.setViewModel(catsViewModel)
 
-        catsViewModel.catsLiveData.observe(this){ result ->
-            when(result){
-                is Result.Error -> view.showError(result.message)
-                is Result.ErrorRes -> view.showError(result.message)
-                is Result.Success<*> -> view.populate(result.catModel as CatModel)
-            }
-        }
-
-        catsViewModel.onInitComplete()
+//        catsViewModel.catsLiveData.observe(this){ result ->
+//            when(result){
+//                is Result.Error -> view.showError(result.message)
+//                is Result.ErrorRes -> view.showError(result.message)
+//                is Result.Success<*> -> view.populate(result.catModel as CatModel)
+//            }
+//        }
+//
+//        catsViewModel.onInitComplete()
 
     }
 

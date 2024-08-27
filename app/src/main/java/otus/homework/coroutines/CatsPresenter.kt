@@ -1,12 +1,15 @@
 package otus.homework.coroutines
 
+import android.util.Log
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
+import java.util.concurrent.CancellationException
 
 class CatsPresenter(private val catsService: CatsService) {
 
@@ -15,26 +18,43 @@ class CatsPresenter(private val catsService: CatsService) {
     private var jobCats: Job? = null
     private val presenterScope = CoroutineScope(Dispatchers.Main + CoroutineName("CatsCoroutine"))
 
+    private fun <T> CoroutineScope.customAsync(block: suspend CoroutineScope.() -> T): Deferred<T?> {
+        return async {
+            try {
+                block() ?: throw Exception()
+            }catch (e: CancellationException){
+                null
+            }catch (e: SocketTimeoutException) {
+                _catsView?.showError(R.string.error_server)
+                null
+            } catch (e: Exception) {
+                _catsView?.showError(e.localizedMessage)
+                CrashMonitor.trackWarning(e)
+                null
+            }
+        }
+    }
+
     fun onInitComplete() {
         jobCats?.cancel()
         jobCats = presenterScope.launch {
-            val fact = async {
+
+            val factDeferred = customAsync {
                 val response = catsService.getCatFact()
-                response.body()!!
+                response.body()
             }
-            val image = async {
+
+            val imageDeferred = customAsync {
                 val response = catsService.getCatImages()
-                response.body()!!
+                response.body()
             }
-            try {
-                val model = CatModel(fact.await().fact, image.await().randomOrNull()?.url)
-                _catsView?.populate(model)
-            }catch (e: SocketTimeoutException){
-                _catsView?.showError(R.string.error_server)
-            }catch (exception: Exception){
-                _catsView?.showError(exception.localizedMessage)
-                CrashMonitor.trackWarning(exception)
-            }
+
+            val fact = factDeferred.await()
+            val image = imageDeferred.await()
+
+            val model = CatModel(fact?.fact, image?.randomOrNull()?.url)
+            _catsView?.populate(model)
+
         }
     }
 
