@@ -9,16 +9,31 @@ class MainActivity : AppCompatActivity() {
 
     private val diContainer = DiContainer()
 
+    lateinit var viewModel: CatsViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val view = layoutInflater.inflate(R.layout.activity_main, null) as CatsView
         setContentView(view)
 
-        catsPresenter = CatsPresenter(diContainer.service)
+        val catsPresenter1 = CatsPresenter(diContainer.service,diContainer.imageService)
+
+        catsPresenter = catsPresenter1
         view.presenter = catsPresenter
         catsPresenter.attachView(view)
-        catsPresenter.onInitComplete()
+        //catsPresenter.onInitComplete()
+
+        viewModel = CatsViewModel(diContainer.service,diContainer.imageService)
+        view.viewModel = viewModel
+        viewModel.catsLiveData.observe(this) { result ->
+            if (result is Success){
+                view.populate(result.cat)
+            } else if (result is Error) {
+                view.showToast(result.error)
+            }
+        }
+        viewModel.init()
     }
 
     override fun onStop() {
