@@ -6,16 +6,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import otus.homework.coroutines.ICatsPresenter.Companion.COROUTINE_NAME
 import java.net.SocketTimeoutException
 
 class CatsPresenter(
     private val apiService: ApiService,
     private val onShowErrorMessage: (Throwable) -> Unit
-) {
-    private var _catsView: ICatsView? = null
-    private var job: Job? = null
+) : ICatsPresenter {
+    override var _catsView: ICatsView? = null
+    override var job: Job? = null
 
-    fun onInitComplete() {
+    override fun onInitComplete() {
         job = CoroutineScope(
             Dispatchers.Main + CoroutineName(COROUTINE_NAME)
         ).launch {
@@ -41,24 +42,9 @@ class CatsPresenter(
 
     private fun showError(throwable: Throwable) {
         onShowErrorMessage(throwable)
+
         if (throwable is SocketTimeoutException) return
 
         CrashMonitor.trackWarning(throwable.localizedMessage.orEmpty())
-    }
-
-    fun attachView(catsView: ICatsView) {
-        _catsView = catsView
-    }
-
-    fun detachView() {
-        _catsView = null
-    }
-
-    fun cancelJob() {
-        if (job?.isActive == true) job?.cancel()
-    }
-
-    companion object {
-        private const val COROUTINE_NAME = "CatsCoroutine"
     }
 }
