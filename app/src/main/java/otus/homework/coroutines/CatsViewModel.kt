@@ -1,38 +1,43 @@
 package otus.homework.coroutines
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
 
 class CatsViewModel(
-    private val apiService: ApiService,
-    private val onShowErrorMessage: (Throwable) -> Unit
-) : ViewModel(), ICatsPresenter {
-    override var _catsView: ICatsView? = null
-    override var job: Job? = null
+    private val apiService: ApiService
+) : ViewModel(), ICatsRefresh {
+
+    private val _catsLiveData = MutableLiveData<Result>()
+    val catsLiveData: LiveData<Result> = _catsLiveData
 
     override fun onInitComplete() {
-        val handler = CoroutineExceptionHandler { _, throwable -> showError(throwable) }
+        viewModelScope.launch {
+            try {
+                val factResult =
+                    async { apiService.serviceCatFact.getCatFact().fact }
+                val imageResult =
+                    async { apiService.serviceCatImage.getCatImage().firstOrNull()?.url.orEmpty() }
 
-        viewModelScope.launch(handler) {
-            val factResult = async { apiService.serviceCatFact.getCatFact().fact }
-            val imageResult = async { apiService.serviceCatImage.getCatImage().firstOrNull()?.url.orEmpty() }
-            val catData =
-                CatData(
-                    fact = factResult.await(),
-                    imageUrl = imageResult.await()
-                )
-
-            _catsView?.populate(Result.Success(catData))
+                val catData =
+                    CatData(
+                        fact = factResult.await(),
+                        imageUrl = imageResult.await()
+                    )
+                _catsLiveData.value = Success(catData)
+            }
+            catch (e : Exception){
+                showError(e)
+            }
         }
     }
 
     private fun showError(throwable: Throwable) {
-        onShowErrorMessage(throwable)
+        _catsLiveData.value = Error(throwable.localizedMessage.orEmpty())
 
         if (throwable is SocketTimeoutException) return
 

@@ -14,12 +14,12 @@ class CatsView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr), ICatsView {
 
-    var presenter :ICatsPresenter? = null
+    var catsRefresh :ICatsRefresh? = null
 
     override fun onFinishInflate() {
         super.onFinishInflate()
         findViewById<Button>(R.id.button).setOnClickListener {
-            presenter?.onInitComplete()
+            catsRefresh?.onInitComplete()
         }
     }
 
@@ -38,14 +38,14 @@ class CatsView @JvmOverloads constructor(
         updateData(catData)
     }
 
-    override fun populate(result: Result<CatData>) {
+    override fun populate(result: Result) {
         when (result) {
-            is Result.Error -> {
+            is Error -> {
                 updateData(emptyCatData)
             }
 
-            is Result.Success -> {
-                updateData(result.data)
+            is Success -> {
+                updateData(result.catData)
             }
         }
     }
@@ -53,5 +53,5 @@ class CatsView @JvmOverloads constructor(
 
 interface ICatsView {
     fun populate(catData: CatData)
-    fun populate(result: Result<CatData>)
+    fun populate(result: Result)
 }

@@ -2,11 +2,13 @@ package otus.homework.coroutines
 
 import kotlinx.coroutines.Job
 
-interface ICatsPresenter {
+interface ICatsRefresh{
+    fun onInitComplete()
+}
+
+interface ICatsPresenter : ICatsRefresh {
     var _catsView: ICatsView?
     var job: Job?
-
-    fun onInitComplete()
 
     fun attachView(catsView: ICatsView) {
         _catsView = catsView
