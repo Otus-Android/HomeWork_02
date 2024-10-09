@@ -32,6 +32,7 @@ class CatsView @JvmOverloads constructor(
             .placeholder(R.drawable.image_placeholder)
             .error(R.drawable.image_not_found)
             .into(findViewById<ImageView>(R.id.imageCat))
+
     }
 
     override fun populate(catData: CatData) {
