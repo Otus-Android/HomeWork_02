@@ -4,10 +4,13 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 class CatsPresenter(
-    private val catsService: CatsService
+    private val catsService: CatsService,
+    private val imageService: CatsImageService
 ) {
 
     private var _catsView: ICatsView? = null
@@ -19,13 +22,21 @@ class CatsPresenter(
 
         presenterScope.launch {
             try {
-                _catsView?.populate(catsService.getCatFact())
+                coroutineScope {
+                    val fact = async { catsService.getCatFact().fact }
+                    val image = async { imageService.getCatImage().first() }
+                    _catsView?.populate(
+                        CatsData(
+                            fact.await(),
+                            image.await()
+                        )
+                    )
+                }
             } catch (e: java.net.SocketTimeoutException) {
                 _catsView?.showError(CatsView.SOCKET_TIMEOUT_EXCEPTION)
             } catch (e: Exception) {
                 CrashMonitor.trackWarning()
                 _catsView?.showError(CatsView.OTHER_EXCEPTION, e.message)
-
             }
         }
     }
