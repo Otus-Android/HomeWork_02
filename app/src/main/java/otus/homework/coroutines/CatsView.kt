@@ -15,12 +15,12 @@ class CatsView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr), ICatsView {
 
-    var presenter: CatsPresenter? = null
+    var viewModel: CatsViewModel? = null
 
     override fun onFinishInflate() {
         super.onFinishInflate()
         findViewById<Button>(R.id.button).setOnClickListener {
-            presenter?.onInitComplete()
+            viewModel?.getData()
         }
     }
 
@@ -29,22 +29,13 @@ class CatsView @JvmOverloads constructor(
         Picasso.get().load(catsData.image.url).into(findViewById<ImageView>(R.id.imageView))
     }
 
-    override fun showError(exceptionType: Int, message: String?) {
-        val text = when (exceptionType) {
-            SOCKET_TIMEOUT_EXCEPTION -> context.getString(R.string.socket_timeout_exception)
-            else -> message ?: context.getString(R.string.unknown_exception)
-        }
-        Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
-    }
-
-    companion object {
-        const val OTHER_EXCEPTION = 0
-        const val SOCKET_TIMEOUT_EXCEPTION = 1
+    override fun showError(message: String) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 }
 
 interface ICatsView {
 
     fun populate(catsData: CatsData)
-    fun showError(exceptionType: Int, message: String? = null)
+    fun showError(message: String)
 }
