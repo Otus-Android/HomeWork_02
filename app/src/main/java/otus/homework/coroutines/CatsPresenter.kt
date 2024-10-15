@@ -4,12 +4,15 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 
 class CatsPresenter(
-    private val catsService: CatsService
+    private val catsService: CatsFacstService,
+    private val imageService: CatsImagesService
 ): ViewModel() {
 
     private var _catsView: ICatsView? = null
@@ -17,14 +20,26 @@ class CatsPresenter(
     fun onInitComplete() {
         presenterScope.launch {
             try {
-                val fact = catsService.getCatFact()
-                _catsView?.populate(fact)
-
-            } catch (error: Throwable) {
+                _catsView?.populate(getContent())
+            } catch (error: Throwable){
                 handleError(error)
             }
         }
     }
+
+    private suspend fun getContent(): CatsContent =
+        withContext(Dispatchers.IO) {
+            val fact = async {
+                catsService.getCatFact()
+            }
+            val image = async {
+                imageService.getImage()
+            }
+            CatsContent(fact.await(), image.await().first())
+        }
+
+
+
 
     private fun handleError(error: Throwable){
         if(error is java.net.SocketTimeoutException){
