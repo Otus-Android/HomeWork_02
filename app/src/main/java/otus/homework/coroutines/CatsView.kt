@@ -4,7 +4,9 @@ import android.content.Context
 import android.util.AttributeSet
 import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.widget.AppCompatImageView
 import androidx.constraintlayout.widget.ConstraintLayout
+import com.squareup.picasso.Picasso
 
 class CatsView @JvmOverloads constructor(
     context: Context,
@@ -21,12 +23,14 @@ class CatsView @JvmOverloads constructor(
         }
     }
 
-    override fun populate(fact: Fact) {
-        findViewById<TextView>(R.id.fact_textView).text = fact.fact
+    override fun populate(cat: Cat) {
+        findViewById<TextView>(R.id.fact_textView).text = cat.fact
+        Picasso.get().load(cat.imageUrl)
+            .into(findViewById<AppCompatImageView>(R.id.random_imageView))
     }
 }
 
 interface ICatsView {
 
-    fun populate(fact: Fact)
+    fun populate(cat: Cat)
 }
