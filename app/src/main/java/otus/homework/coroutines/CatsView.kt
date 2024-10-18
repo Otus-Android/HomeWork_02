@@ -14,19 +14,17 @@ class CatsView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr), ICatsView {
 
-    var presenter :CatsPresenter? = null
-
-    override fun onFinishInflate() {
-        super.onFinishInflate()
-        findViewById<Button>(R.id.button).setOnClickListener {
-            presenter?.onInitComplete()
-        }
+    override fun populate(cat: Cat) {
+        val textView = findViewById<TextView>(R.id.fact_textView)
+        textView.text = cat.fact
+        val imageView = findViewById<AppCompatImageView>(R.id.random_imageView)
+        Picasso.get().load(cat.imageUrl).into(imageView)
     }
 
-    override fun populate(cat: Cat) {
-        findViewById<TextView>(R.id.fact_textView).text = cat.fact
-        Picasso.get().load(cat.imageUrl)
-            .into(findViewById<AppCompatImageView>(R.id.random_imageView))
+    fun setOnButtonClickListener(block: () -> Unit) {
+        findViewById<Button>(R.id.button).setOnClickListener {
+            block()
+        }
     }
 }
 

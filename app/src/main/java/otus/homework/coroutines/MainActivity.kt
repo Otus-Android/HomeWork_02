@@ -3,45 +3,57 @@ package otus.homework.coroutines
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.MutableCreationExtras
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var catsPresenter: CatsPresenter
-
     private val diContainer = DiContainer()
+    private var catView: CatsView? = null
+
+    private val viewModelStoreOwner: ViewModelStoreOwner = this
+    private val catsViewModel: CatsViewModel by lazy {
+        ViewModelProvider.create(
+            viewModelStoreOwner,
+            factory = CatsViewModel.Factory,
+            extras = MutableCreationExtras().apply {
+                set(CatsViewModel.CATS_SERVICE, diContainer.factService)
+                set(CatsViewModel.IMAGE_SERVICE, diContainer.imageService)
+            },
+        )[CatsViewModel::class]
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val view = layoutInflater.inflate(R.layout.activity_main, null) as CatsView
-        setContentView(view)
+        catView = layoutInflater.inflate(R.layout.activity_main, null) as CatsView
+        setContentView(catView)
 
-        catsPresenter = CatsPresenter(diContainer.factService, diContainer.imageService)
         initObservers()
-        catsPresenter.initCatStateListener()
-
-        view.presenter = catsPresenter
-        catsPresenter.attachView(view)
-        catsPresenter.onInitComplete()
+        catView?.setOnButtonClickListener {
+            catsViewModel.getCats()
+        }
+        catsViewModel.getCats()
     }
 
     override fun onStop() {
-        if (isFinishing) {
-            catsPresenter.cancelCatsJob()
-            catsPresenter.detachView()
-        }
+        catsViewModel.cancelJob()
         super.onStop()
     }
 
     private fun initObservers() {
         lifecycleScope.launch {
             launch {
-                catsPresenter.eventShowErrorConnectToServer.collect { showErrorToast() }
+                catsViewModel.catState.collect { catView?.populate(it) }
             }
             launch {
-                catsPresenter.eventShowExceptionMessage.collect(::showErrorToast)
+                catsViewModel.eventShowErrorConnectToServer.collect { showErrorToast() }
+            }
+            launch {
+                catsViewModel.eventShowExceptionMessage.collect(::showErrorToast)
             }
         }
     }
