@@ -3,8 +3,10 @@ package otus.homework.coroutines
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
+import kotlin.coroutines.cancellation.CancellationException
 
 class CatsViewModel(
     private val catsService: CatsService,
@@ -18,19 +20,26 @@ class CatsViewModel(
         }
 
         viewModelScope.launch(handler) {
-            try {
-                val fact = catsService.getCatFact()
-                val image = imageService.getCatImage()
 
+            val fact = async {
+                catsService.getCatFact()
+            }
+            val image = async {
+                imageService.getCatImage()
+            }
+
+            try {
                 val factImage = FactImage(
-                    fact = fact.fact,
-                    url = image.first().url
+                    fact = fact.await().fact,
+                    url = image.await().first().url
                 )
                 _catsView?.populate(Result.Success(factImage))
-            } catch (e: SocketTimeoutException) {
+            } catch (socketException: SocketTimeoutException) {
                 _catsView?.populate(Result.Error("Не удалось получить ответ от сервером"))
-            } catch (e1: Exception) {
-                _catsView?.populate(Result.Error(e1.message ?: ""))
+            } catch (exception: Exception) {
+                if (exception !is CancellationException){
+                    _catsView?.populate(Result.Error(exception.message ?: ""))
+                }
             }
         }
     }
