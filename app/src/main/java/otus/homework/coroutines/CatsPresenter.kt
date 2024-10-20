@@ -1,6 +1,10 @@
 package otus.homework.coroutines
 
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 class CatsPresenter(
     private val catsService: CatsService
@@ -8,7 +12,11 @@ class CatsPresenter(
 
     private var _catsView: ICatsView? = null
 
-    suspend fun onInitComplete() = coroutineScope {
+    private val job = Job()
+    private val presenterScope =
+        CoroutineScope(Dispatchers.Main + job + CoroutineName("CatsCoroutine"))
+
+    fun onInitComplete() = presenterScope.launch {
         catsService.getCatFact().let { response ->
             if (response.isSuccessful && response.body() != null)
                 _catsView?.populate(response.body()!!)
@@ -22,6 +30,7 @@ class CatsPresenter(
     }
 
     fun detachView() {
+        job.cancel()
         _catsView = null
     }
 }

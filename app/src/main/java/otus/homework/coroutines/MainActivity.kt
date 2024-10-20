@@ -2,7 +2,6 @@ package otus.homework.coroutines
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.coroutines.runBlocking
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,9 +18,7 @@ class MainActivity : AppCompatActivity() {
         catsPresenter = CatsPresenter(diContainer.service)
         view.presenter = catsPresenter
         catsPresenter.attachView(view)
-        runBlocking {
-            catsPresenter.onInitComplete()
-        }
+        catsPresenter.onInitComplete()
     }
 
     override fun onStop() {

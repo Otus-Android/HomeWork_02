@@ -5,7 +5,6 @@ import android.util.AttributeSet
 import android.widget.Button
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
-import kotlinx.coroutines.runBlocking
 
 class CatsView @JvmOverloads constructor(
     context: Context,
@@ -18,9 +17,7 @@ class CatsView @JvmOverloads constructor(
     override fun onFinishInflate() {
         super.onFinishInflate()
         findViewById<Button>(R.id.button).setOnClickListener {
-            runBlocking {
-                presenter?.onInitComplete()
-            }
+            presenter?.onInitComplete()
         }
     }
 
