@@ -1,17 +1,19 @@
 package otus.homework.coroutines
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
 
 class CatsPresenter(
-    private val catsService: CatsService
+    private val catsService: CatsService,
+    private val imageService: ImageService
 ) {
 
     private var _catsView: ICatsView? = null
@@ -23,27 +25,41 @@ class CatsPresenter(
 
     fun onInitComplete() = presenterScope.launch {
         context = (_catsView as CatsView).context
+        var text = ""
+        var image = ""
         runCatching {
             catsService.getCatFact()
         }.mapCatching { response ->
             if (response.isSuccessful && response.body() != null)
-                _catsView?.populate(response.body()!!)
+                text = response.body()?.fact.orEmpty()
             else
                 CrashMonitor.trackWarning()
-        }.getOrElse { e ->
-            when (e) {
-                is SocketTimeoutException -> {
-                    Toast.makeText(
-                        context,
-                        context?.getString(R.string.socket_timeout_exception),
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+        }.getOrElse { ::showErrorToast }
 
-                else -> {
-                    CrashMonitor.trackWarning()
-                    Toast.makeText(context, e.localizedMessage, Toast.LENGTH_LONG).show()
-                }
+        runCatching {
+            imageService.getImage()
+        }.mapCatching { response ->
+            if (response.isSuccessful && response.body() != null)
+                image = response.body()?.first()?.url.orEmpty()
+            else
+                CrashMonitor.trackWarning()
+        }.getOrElse { ::showErrorToast }
+        (_catsView as CatsView).populate(MainUiModel(text, image))
+    }
+
+    private fun showErrorToast(e: Throwable) {
+        when (e) {
+            is SocketTimeoutException -> {
+                Toast.makeText(
+                    context,
+                    context?.getString(R.string.socket_timeout_exception),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+
+            else -> {
+                CrashMonitor.trackWarning()
+                Toast.makeText(context, e.localizedMessage, Toast.LENGTH_LONG).show()
             }
         }
     }
