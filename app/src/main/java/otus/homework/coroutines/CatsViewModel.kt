@@ -29,7 +29,7 @@ class CatsViewModel(
                 text = response.body()?.fact.orEmpty()
             else
                 CrashMonitor.trackWarning()
-        }.getOrElse { ::showErrorToast }
+        }.getOrElse { Result.Error<MainUiModel>(it) }
 
         runCatching {
             imageService.getImage()
@@ -38,25 +38,8 @@ class CatsViewModel(
                 image = response.body()?.first()?.url.orEmpty()
             else
                 CrashMonitor.trackWarning()
-        }.getOrElse { ::showErrorToast }
+        }.getOrElse { Result.Error<MainUiModel>(it) }
         state.value = Result.Success(MainUiModel(text, image))
-    }
-
-    fun showErrorToast(e: Throwable) {
-        when (e) {
-            is SocketTimeoutException -> {
-                Toast.makeText(
-                    context,
-                    context?.getString(R.string.socket_timeout_exception),
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-
-            else -> {
-                CrashMonitor.trackWarning()
-                Toast.makeText(context, e.localizedMessage, Toast.LENGTH_LONG).show()
-            }
-        }
     }
 
     fun attachView(catsView: ICatsView) {
