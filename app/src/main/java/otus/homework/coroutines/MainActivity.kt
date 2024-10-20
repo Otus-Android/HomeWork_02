@@ -2,10 +2,13 @@ package otus.homework.coroutines
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var catsPresenter: CatsPresenter
+    lateinit var catsViewModel: CatsViewModel
 
     private val diContainer = DiContainer()
 
@@ -15,15 +18,25 @@ class MainActivity : AppCompatActivity() {
         val view = layoutInflater.inflate(R.layout.activity_main, null) as CatsView
         setContentView(view)
 
-        catsPresenter = CatsPresenter(diContainer.service, diContainer.serviceImage)
-        view.presenter = catsPresenter
-        catsPresenter.attachView(view)
-        catsPresenter.onInitComplete()
+        catsViewModel = CatsViewModel(diContainer.service, diContainer.serviceImage)
+        view.viewModel = catsViewModel
+        catsViewModel.attachView(view)
+        catsViewModel.onInitComplete()
+
+        catsViewModel.state.onEach {
+            when(it) {
+                is Result.Error -> {
+                    catsViewModel.showErrorToast(it.error)
+                }
+                is Result.Noting -> {}
+                is Result.Success -> view.populate(it.mainUiModel)
+            }
+        }.launchIn(lifecycleScope)
     }
 
     override fun onStop() {
         if (isFinishing) {
-            catsPresenter.detachView()
+            catsViewModel.detachView()
         }
         super.onStop()
     }
