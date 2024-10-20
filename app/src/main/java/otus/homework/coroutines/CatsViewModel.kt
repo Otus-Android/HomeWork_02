@@ -1,12 +1,10 @@
 package otus.homework.coroutines
 
-import android.content.Context
-import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import java.net.SocketTimeoutException
 
 class CatsViewModel(
     private val catsService: CatsService,
@@ -16,10 +14,12 @@ class CatsViewModel(
     val state: MutableStateFlow<Result<MainUiModel>> = MutableStateFlow(Result.Noting())
 
     private var _catsView: ICatsView? = null
-    private var context: Context? = null
 
-    fun onInitComplete() = viewModelScope.launch {
-        context = (_catsView as CatsView).context
+    private val handler = CoroutineExceptionHandler { coroutineContext, throwable ->
+        CrashMonitor.trackWarning()
+    }
+
+    fun onInitComplete() = viewModelScope.launch(handler) {
         var text = ""
         var image = ""
         runCatching {
