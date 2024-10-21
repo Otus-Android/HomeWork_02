@@ -7,50 +7,51 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.isInvisible
 import com.squareup.picasso.Picasso
 
 class CatsView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : ConstraintLayout(context, attrs, defStyleAttr), ICatsView {
+) : ConstraintLayout(context, attrs, defStyleAttr) {
 
-    var presenter :CatsPresenter? = null
+    private val factTextView: TextView by lazy { findViewById(R.id.fact_textView) }
+    private val imageView: ImageView by lazy { findViewById(R.id.image) }
+    private val button: Button by lazy { findViewById(R.id.button) }
 
-    override fun onFinishInflate() {
-        super.onFinishInflate()
-        findViewById<Button>(R.id.button).setOnClickListener {
-            presenter?.onInitComplete()
-        }
+    fun setOnButtonClickListener(action: () -> Unit) {
+        button.setOnClickListener { action() }
     }
 
-    override fun populate(fact: Fact, image: Image) {
-        findViewById<TextView>(R.id.fact_textView).text = fact.fact
+     fun populate(catFact: CatFact) {
+         factTextView.isInvisible = false
+         imageView.isInvisible = false
 
-        Picasso
-            .get()
-            .load(image.url)
-            .into(findViewById<ImageView>(R.id.image))
+         factTextView.text = catFact.fact.fact
+
+         Picasso
+             .get()
+             .load(catFact.image.url)
+             .into(imageView)
     }
 
-    override fun showSocketTimeoutError() {
+    fun hide() {
+        factTextView.isInvisible = true
+        imageView.isInvisible = true
+
+        imageView.setImageDrawable(null)
+    }
+
+    fun showSocketTimeoutError() {
         showToast(context.getString(R.string.socket_timeout_error))
     }
 
-    override fun showToast(text: String?) {
+    fun showToast(text: String?) {
         Toast.makeText(
             this.context,
             text ?: context.getString(R.string.unknown_error),
             Toast.LENGTH_LONG
         ).show()
     }
-}
-
-interface ICatsView {
-
-    fun populate(fact: Fact, image: Image)
-
-    fun showSocketTimeoutError()
-
-    fun showToast(text: String?)
 }
