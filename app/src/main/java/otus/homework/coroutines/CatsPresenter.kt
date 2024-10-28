@@ -1,28 +1,26 @@
 package otus.homework.coroutines
 
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import java.net.SocketTimeoutException
+import kotlin.coroutines.cancellation.CancellationException
 
 class CatsPresenter(
-    private val catsService: CatsService
+    private val catsService: CatsService,
+    private val pictureService: PicturesService
 ) {
-
     private var _catsView: ICatsView? = null
+    private val presenterScope =
+        CoroutineScope(Dispatchers.Main + SupervisorJob() + CoroutineName("CatsCoroutine"))
+    private var job: Job? = null
 
     fun onInitComplete() {
-        catsService.getCatFact().enqueue(object : Callback<Fact> {
-
-            override fun onResponse(call: Call<Fact>, response: Response<Fact>) {
-                if (response.isSuccessful && response.body() != null) {
-                    _catsView?.populate(response.body()!!)
-                }
-            }
-
-            override fun onFailure(call: Call<Fact>, t: Throwable) {
-                CrashMonitor.trackWarning()
-            }
-        })
+        getCatInfo()
     }
 
     fun attachView(catsView: ICatsView) {
@@ -31,5 +29,29 @@ class CatsPresenter(
 
     fun detachView() {
         _catsView = null
+        job?.cancel()
+        job = null
+    }
+
+    private fun getCatInfo() {
+        job = presenterScope.launch {
+            try {
+                val fact = async { catsService.getCatFact() }
+                val pictures = async { pictureService.getPictures() }
+                _catsView?.populate(
+                    CatsInfo(
+                        fact = fact.await().fact,
+                        picture = pictures.await().firstOrNull()?.url.orEmpty()
+                    )
+                )
+            } catch (e: SocketTimeoutException) {
+                _catsView?.showErrorToast("Не удалось получить ответ от сервера")
+                throw CancellationException()
+            } catch (e: Exception) {
+                CrashMonitor.trackWarning()
+                _catsView?.showErrorToast(e.message ?: "Неизвестная ошибка, попробуйте позже")
+                throw CancellationException()
+            }
+        }
     }
 }
