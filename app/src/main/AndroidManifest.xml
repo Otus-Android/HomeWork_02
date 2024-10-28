@@ -18,6 +18,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".presenter.PresenterActivity" android:label="Presenter driven facts"/>
+        <activity android:name=".viewmodel.ViewModelActivity" android:label="ViewModel driven facts"/>
     </application>
 
 </manifest>
