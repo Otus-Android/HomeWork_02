@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -65,7 +66,10 @@ class CatsPresenter(
             return if (scope != null) {
                 scope
             } else {
-                scope = CloseableCoroutineScope(Dispatchers.Main + CoroutineName("CatsCoroutine"))
+                scope = CloseableCoroutineScope(
+                    Dispatchers.Main
+                        + SupervisorJob()
+                        + CoroutineName("CatsCoroutine"))
                 scope
             }
         }
