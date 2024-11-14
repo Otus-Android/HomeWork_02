@@ -1,13 +1,12 @@
 package otus.homework.coroutines
 
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
 
@@ -25,27 +24,35 @@ class CatsPresenter(
 
     fun onInitComplete() = presenterScope.launch {
         context = (_catsView as CatsView).context
+        val text = async { getText() }
+        val image = async { getImage() }
+        (_catsView as CatsView).populate(MainUiModel(text.await(), image.await()))
+    }
+
+    private suspend fun getText(): String {
         var text = ""
-        var image = ""
+
         runCatching {
             catsService.getCatFact()
         }.mapCatching { response ->
-            if (response.isSuccessful && response.body() != null)
-                text = response.body()?.fact.orEmpty()
-            else
-                CrashMonitor.trackWarning()
-        }.getOrElse { ::showErrorToast }
+            text = response.fact
+        }.getOrElse(::showErrorToast)
+
+        return text
+    }
+
+    private suspend fun getImage(): String {
+        var image = ""
 
         runCatching {
             imageService.getImage()
         }.mapCatching { response ->
-            if (response.isSuccessful && response.body() != null)
-                image = response.body()?.first()?.url.orEmpty()
-            else
-                CrashMonitor.trackWarning()
-        }.getOrElse { ::showErrorToast }
-        (_catsView as CatsView).populate(MainUiModel(text, image))
+            image = response.first().url
+        }.getOrElse(::showErrorToast)
+
+        return image
     }
+
 
     private fun showErrorToast(e: Throwable) {
         when (e) {

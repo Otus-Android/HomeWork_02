@@ -6,5 +6,5 @@ import retrofit2.http.GET
 interface ImageService {
 
     @GET("v1/images/search")
-    suspend fun getImage(): Response<List<ImageModel>>
+    suspend fun getImage(): List<ImageModel>
 }

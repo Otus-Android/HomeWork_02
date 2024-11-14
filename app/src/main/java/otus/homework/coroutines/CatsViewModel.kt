@@ -3,7 +3,10 @@ package otus.homework.coroutines
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class CatsViewModel(
@@ -11,7 +14,8 @@ class CatsViewModel(
     private val imageService: ImageService
 ) : ViewModel() {
 
-    val state: MutableStateFlow<Result<MainUiModel>> = MutableStateFlow(Result.Noting())
+    private val _state: MutableStateFlow<Result<MainUiModel>> = MutableStateFlow(Result.Noting())
+    val state = _state.asStateFlow()
 
     private var _catsView: ICatsView? = null
 
@@ -20,26 +24,35 @@ class CatsViewModel(
     }
 
     fun onInitComplete() = viewModelScope.launch(handler) {
+        val text = async { getText() }
+        val image = async { getImage() }
+
+        if (text.await().isNotEmpty() && image.await().isNotEmpty())
+            _state.value = Result.Success(MainUiModel(text.await(), image.await()))
+    }
+
+    private suspend fun getText(): String {
         var text = ""
-        var image = ""
+
         runCatching {
             catsService.getCatFact()
         }.mapCatching { response ->
-            if (response.isSuccessful && response.body() != null)
-                text = response.body()?.fact.orEmpty()
-            else
-                CrashMonitor.trackWarning()
-        }.getOrElse { Result.Error<MainUiModel>(it) }
+            text = response.fact
+        }.getOrElse { _state.value = Result.Error(it) }
+
+        return text
+    }
+
+    private suspend fun getImage(): String {
+        var image = ""
 
         runCatching {
             imageService.getImage()
         }.mapCatching { response ->
-            if (response.isSuccessful && response.body() != null)
-                image = response.body()?.first()?.url.orEmpty()
-            else
-                CrashMonitor.trackWarning()
-        }.getOrElse { Result.Error<MainUiModel>(it) }
-        state.value = Result.Success(MainUiModel(text, image))
+            image = response.first().url
+        }.getOrElse { _state.value = Result.Error(it) }
+
+        return image
     }
 
     fun attachView(catsView: ICatsView) {
