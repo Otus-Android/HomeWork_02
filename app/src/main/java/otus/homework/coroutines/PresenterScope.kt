@@ -1,9 +1,6 @@
 package otus.homework.coroutines
 
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainCoroutineDispatcher
+import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -13,7 +10,7 @@ class PresenterScope(
 ): CoroutineScope {
 
     override val coroutineContext: CoroutineContext
-        get() = parentCoroutineContext + dispatcher + CoroutineName(DEFAULT_COROUTINE_NAME)
+        get() = Job() + parentCoroutineContext + dispatcher + CoroutineName(DEFAULT_COROUTINE_NAME)
 
     companion object {
         private const val DEFAULT_COROUTINE_NAME = "CatsCoroutine"

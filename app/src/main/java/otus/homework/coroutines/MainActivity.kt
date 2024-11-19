@@ -3,9 +3,7 @@ package otus.homework.coroutines
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelStoreOwner
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.*
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import kotlinx.coroutines.launch
 
@@ -39,21 +37,15 @@ class MainActivity : AppCompatActivity() {
         catsViewModel.getCats()
     }
 
-    override fun onStop() {
-        catsViewModel.cancelJob()
-        super.onStop()
-    }
-
     private fun initObservers() {
         lifecycleScope.launch {
-            launch {
-                catsViewModel.catState.collect { catView?.populate(it) }
-            }
-            launch {
-                catsViewModel.eventShowErrorConnectToServer.collect { showErrorToast() }
-            }
-            launch {
-                catsViewModel.eventShowExceptionMessage.collect(::showErrorToast)
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    catsViewModel.catState.collect { catView?.populate(it) }
+                }
+                launch {
+                    catsViewModel.eventShowErrorMessage.collect(::showErrorToast)
+                }
             }
         }
     }

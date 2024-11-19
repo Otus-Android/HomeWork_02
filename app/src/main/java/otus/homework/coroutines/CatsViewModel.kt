@@ -1,19 +1,18 @@
 package otus.homework.coroutines
 
+import android.net.http.HttpException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.launch
 
 class CatsViewModel(
     private val catsService: CatsService,
@@ -44,11 +43,8 @@ class CatsViewModel(
 
     val catState: Flow<Cat> = combine(_fact, _image) { fact, image -> Cat(fact?.fact, image?.url) }
 
-    private val _eventShowErrorConnectToServer = MutableSharedFlow<Unit>()
-    val eventShowErrorConnectToServer = _eventShowErrorConnectToServer.asSharedFlow()
-
-    private val _eventShowExceptionMessage = MutableSharedFlow<String>()
-    val eventShowExceptionMessage = _eventShowExceptionMessage.asSharedFlow()
+    private val _eventShowErrorMessage = MutableSharedFlow<String?>()
+    val eventShowErrorMessage = _eventShowErrorMessage.asSharedFlow()
 
     private val exceptionHandler = CoroutineExceptionHandler { _, exception ->
         viewModelScope.launch {
@@ -60,8 +56,8 @@ class CatsViewModel(
         catsJob?.cancel()
 
         catsJob = viewModelScope.launch(exceptionHandler) {
-            getRandomFact()
-            getRandomImage()
+            launch { getRandomFact() }
+            launch { getRandomImage() }
         }
     }
 
@@ -84,17 +80,13 @@ class CatsViewModel(
     private suspend fun handleError(error: Throwable) {
         when (error) {
             is java.net.SocketTimeoutException -> {
-                _eventShowErrorConnectToServer.emit(Unit)
+                _eventShowErrorMessage.emit(null)
             }
 
             else -> {
                 CrashMonitor.trackWarning(error)
-                error.message?.let { _eventShowExceptionMessage.emit(it) }
+                error.message?.let { _eventShowErrorMessage.emit(it) }
             }
         }
-    }
-
-    fun cancelJob() {
-        catsJob?.cancel()
     }
 }
