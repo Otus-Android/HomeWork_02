@@ -46,11 +46,9 @@ class CatsPresenter(
                 )
             } catch (e: SocketTimeoutException) {
                 _catsView?.showErrorToast("Не удалось получить ответ от сервера")
-                throw CancellationException()
             } catch (e: Exception) {
                 CrashMonitor.trackWarning()
                 _catsView?.showErrorToast(e.message ?: "Неизвестная ошибка, попробуйте позже")
-                throw CancellationException()
             }
         }
     }
