@@ -1,15 +1,15 @@
 package otus.homework.coroutines
 
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlin.coroutines.CoroutineContext
 
 class CatsPresenter(
     private val catsService: CatsFacstService,
@@ -17,6 +17,11 @@ class CatsPresenter(
 ): ViewModel() {
 
     private var _catsView: ICatsView? = null
+
+    private val presenterScope: CoroutineScope = CoroutineScope(
+    Dispatchers.Main
+    + SupervisorJob()
+    + CoroutineName("CatsCoroutine"))
 
     fun onInitComplete() {
         presenterScope.launch {
@@ -29,7 +34,7 @@ class CatsPresenter(
     }
 
     private suspend fun getContent(): CatsContent =
-        withContext(Dispatchers.IO) {
+        coroutineScope {
             val fact = async {
                 catsService.getCatFact()
             }
@@ -45,7 +50,7 @@ class CatsPresenter(
     private fun handleError(error: Throwable){
         if(error is java.net.SocketTimeoutException){
             _catsView?.showToast(ERROR_MESSAGE)
-        } else {
+        } else if(error !is CancellationException) {
             CrashMonitor.trackWarning()
             _catsView?.showToast(error.message.toString())
         }
@@ -57,33 +62,10 @@ class CatsPresenter(
 
     fun detachView() {
         _catsView = null
-        presenterScope.close()
+        presenterScope.cancel()
     }
 
-    private val presenterScope: CloseableCoroutineScope
-        get()  {
-            var scope: CloseableCoroutineScope? = null
-            return if (scope != null) {
-                scope
-            } else {
-                scope = CloseableCoroutineScope(
-                    Dispatchers.Main
-                        + SupervisorJob()
-                        + CoroutineName("CatsCoroutine"))
-                scope
-            }
-        }
 
-    /**
-     * Интерфейс описывающий закрываемый скоуп
-     */
-    private class CloseableCoroutineScope(override val coroutineContext: CoroutineContext): CoroutineScope {
-
-        /**
-         * Отменяем Job связанный со скоупом через корутин контекст
-         */
-        fun close() = coroutineContext.cancel()
-    }
 
     private companion object{
         const val ERROR_MESSAGE = "Не удалось получить ответ от серверa"

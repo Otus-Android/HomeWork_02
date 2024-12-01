@@ -6,10 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class CatsViewModel(
     private val catsService: CatsFacstService,
@@ -26,7 +24,11 @@ class CatsViewModel(
         viewModelScope.launch(
             createExceptionHandler{error ->  handleError(error)}
         ){
-           _uiStateLiveDate.value =  CatsUiState.Success(getContent())
+            val facts = async { catsService.getCatFact() }
+            val image = async { imageService.getImage() }
+
+            _uiStateLiveDate.value =
+                CatsUiState.Success(CatsContent(facts.await(), image.await().first()))
         }
     }
 
@@ -44,12 +46,6 @@ class CatsViewModel(
             errorBlock.invoke(error)
         }
 
-    private suspend fun getContent(): CatsContent =
-        withContext(Dispatchers.IO){
-            val facts = async { catsService.getCatFact() }
-            val image = async { imageService.getImage() }
-            CatsContent(facts.await(), image.await().first())
-        }
 
     private companion object{
         const val ERROR_MESSAGE = "Не удалось получить ответ от серверa"
