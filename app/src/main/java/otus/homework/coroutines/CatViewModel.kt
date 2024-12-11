@@ -1,13 +1,9 @@
 package otus.homework.coroutines
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
 
@@ -21,21 +17,25 @@ class CatViewModel(
     private val _liveData = MutableLiveData<Result>()
     val liveData = _liveData
 
+    private val exceptionHandler = CoroutineExceptionHandler { _, _ ->
+        CrashMonitor.trackWarning()
+    }
+
     fun onInitComplete() {
-        PresenterScope.scope.launch(PresenterScope.exceptionHandler) {
+        viewModelScope.launch(exceptionHandler) {
             try {
-                val success = Result.Success(
-                    CatModel(
-                        catsFactService.getCatFact().fact,
-                        catsImageService.getCatImage().first().url
+                _liveData.postValue(
+                    Result.Success(
+                        CatModel(
+                            catsFactService.getCatFact().fact,
+                            catsImageService.getCatImage().first().url
+                        )
                     )
                 )
-
-                _liveData.postValue(success)
             } catch (e: SocketTimeoutException) {
-                _catsView?.toast("Не удалось получить ответ от сервером")
+                _liveData.postValue(Result.Error("Не удалось получить ответ от сервером"))
             } catch (e: Throwable) {
-                _catsView?.toast(e.message)
+                _liveData.postValue(Result.Error(e.message))
                 throw e
             }
 
@@ -49,14 +49,4 @@ class CatViewModel(
     fun detachView() {
         _catsView = null
     }
-}
-
-object PresenterScope {
-    val exceptionHandler = CoroutineExceptionHandler { _, _ ->
-        CrashMonitor.trackWarning()
-    }
-
-    val scope = CoroutineScope(
-        SupervisorJob() + Dispatchers.Main + CoroutineName("CatsCoroutine")
-    )
 }
