@@ -34,27 +34,28 @@ class CatsViewModel(
 
     fun onInitComplete() {
 
-        val factDeferred = viewModelScope.async(exceptionHandler + Dispatchers.Default) {
-            with(catsService.getCatFact()) {
-                when {
-                    isSuccessful.not() || body() == null -> throw Exception("Wrong response!")
-                    else -> body()!!
+        viewModelScope.launch(exceptionHandler + Dispatchers.Default) {
+
+            val factDeferred = async {
+                with(catsService.getCatFact()) {
+                    when {
+                        isSuccessful.not() || body() == null -> throw Exception("Wrong response!")
+                        else -> body()!!
+                    }
                 }
             }
-        }
 
-        val pictureDeferred = viewModelScope.async(exceptionHandler + Dispatchers.Default) {
+            val pictureDeferred = async {
 
 
-            with(imagesService.getRandomImageUrl()) {
-                when {
-                    isSuccessful.not() || body() == null -> throw Exception("Wrong response!")
-                    else -> body()!!
+                with(imagesService.getRandomImageUrl()) {
+                    when {
+                        isSuccessful.not() || body() == null -> throw Exception("Wrong response!")
+                        else -> body()!!
+                    }
                 }
             }
-        }
 
-        viewModelScope.launch {
             applyContent(factDeferred.await(), pictureDeferred.await().first().url)
         }
 
