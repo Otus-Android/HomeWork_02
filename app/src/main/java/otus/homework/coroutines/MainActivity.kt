@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import kotlinx.coroutines.cancel
 
 class MainActivity : AppCompatActivity() {
 
@@ -40,7 +39,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         if (isFinishing) {
-            PresenterScope.scope.cancel()
             //catsPresenter.detachView()
             catsViewModel.detachView()
         }
