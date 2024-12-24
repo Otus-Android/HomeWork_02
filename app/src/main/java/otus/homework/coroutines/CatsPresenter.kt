@@ -1,5 +1,6 @@
 package otus.homework.coroutines
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,11 +32,17 @@ class CatsPresenter(
                     val fact = factJob.await()
                     val image = imageJob.await()
                     _catsView?.populate(CatData(fact,image.first()))
-                } catch (e: SocketTimeoutException){
-                    _catsView?.showToast(timeoutError)
-                } catch (e: Exception){
-                    _catsView?.showToast(e.message)
-                    CrashMonitor.trackWarning(e.message)
+
+                }
+                catch (t: Throwable) {
+                    when (t) {
+                        is CancellationException -> throw t
+                        is SocketTimeoutException -> _catsView?.showToast(timeoutError)
+                        else -> {
+                            _catsView?.showToast(t.message)
+                            CrashMonitor.trackWarning(t.message)
+                        }
+                    }
                 }
             }
 

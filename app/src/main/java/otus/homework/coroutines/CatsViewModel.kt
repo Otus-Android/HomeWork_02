@@ -21,8 +21,9 @@ class CatsViewModel(
     private var _catsView: ICatsView? = null
     private val timeoutError: String = "Не удалось получить ответ от сервером"
 
-    val catsLiveData: MutableLiveData<Result> =MutableLiveData<Result>()
 
+    private val mutCatsLiveData: MutableLiveData<Result> =MutableLiveData<Result>()
+    val catsLiveData: LiveData<Result> = mutCatsLiveData
 
     fun init() {
 
@@ -36,15 +37,15 @@ class CatsViewModel(
         val handler = CoroutineExceptionHandler { _, exception ->
             CrashMonitor.trackWarning(exception.message)
             if (exception is SocketTimeoutException){
-                catsLiveData.value = Error(timeoutError)
+                mutCatsLiveData.value = Error(timeoutError)
             } else {
-                catsLiveData.value = Error(exception.message)
+                mutCatsLiveData.value = Error(exception.message)
             }}
 
         viewModelScope.launch(handler) {
             val fact = factJob.await()
             val image = imageJob.await()
-            catsLiveData.value = Success(CatData(fact,image.first()))
+            mutCatsLiveData.value = Success(CatData(fact,image.first()))
         }
 
     }
