@@ -29,9 +29,9 @@ class CatsViewModel(
     val catsLiveData: LiveData<Result> = _catsLiveData
 
     fun onInitComplete() {
-        val factDef = viewModelScope.async { catsService.getCatFact() }
-        val imageDef = viewModelScope.async { catsServiceImage.getCatImage() }
         viewModelScope.launch(handler) {
+            val factDef = async { catsService.getCatFact() }
+            val imageDef = async { catsServiceImage.getCatImage() }
             val fact = factDef.await()
             Log.d(tag, "fact was received: $fact")
             val catImage = imageDef.await()
