@@ -7,4 +7,7 @@ object CrashMonitor {
      */
     fun trackWarning() {
     }
+
+    fun trackWarning(msg: String) {
+    }
 }
