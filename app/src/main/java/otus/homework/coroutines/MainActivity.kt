@@ -16,7 +16,11 @@ class MainActivity : AppCompatActivity() {
         val view = layoutInflater.inflate(R.layout.activity_main, null) as CatsView
         setContentView(view)
 
-        catsPresenter = CatsPresenter(diContainer.service, diContainer.presenterScope) {
+        catsPresenter = CatsPresenter(
+            catsService = diContainer.service,
+            imageService = diContainer.imageService,
+            presenterScope = diContainer.presenterScope
+        ) {
             Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
         }
         view.presenter = catsPresenter

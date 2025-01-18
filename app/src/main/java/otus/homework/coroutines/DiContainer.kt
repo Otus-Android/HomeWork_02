@@ -15,7 +15,15 @@ class DiContainer {
             .build()
     }
 
+    private val retrofitForImage by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://api.thecatapi.com/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
     val service by lazy { retrofit.create(CatsService::class.java) }
+    val imageService by lazy { retrofitForImage.create(ImageService::class.java) }
 
     val presenterScope by lazy { CoroutineScope(Dispatchers.Main + CoroutineName("CatsCoroutine")) }
 }
