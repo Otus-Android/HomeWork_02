@@ -4,12 +4,14 @@ import android.content.Context
 import android.content.Intent
 import android.util.AttributeSet
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat.startActivity
 import androidx.core.os.bundleOf
+import com.squareup.picasso.Picasso
 
 
 class CatsView @JvmOverloads constructor(
@@ -18,7 +20,7 @@ class CatsView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr), ICatsView {
 
-    var presenter :CatsPresenter? = null
+    var presenter: CatsPresenter? = null
 
     override fun onFinishInflate() {
         super.onFinishInflate()
@@ -32,8 +34,11 @@ class CatsView @JvmOverloads constructor(
         }
     }
 
-    override fun populate(fact: Fact) {
+    override fun populate(fact: Fact, images: List<CatImage>) {
         findViewById<TextView>(R.id.fact_textView).text = fact.fact
+        images.firstOrNull()?.let {
+            Picasso.get().load(it.url).into(findViewById<ImageView>(R.id.cat_image))
+        }
     }
 
     override fun handle(@StringRes resId: Int) {
@@ -45,7 +50,7 @@ class CatsView @JvmOverloads constructor(
     }
 }
 
-interface ICatsView: IUserMessageHandler {
+interface ICatsView : IUserMessageHandler {
 
-    fun populate(fact: Fact)
+    fun populate(fact: Fact, images: List<CatImage>)
 }
