@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">Cat Facts </string>
     <string name="more_facts">More Facts</string>
+    <string name="app_unknown_error">Smth get wrong</string>
+    <string name="app_request_timeout">Time out of Server</string>
+    <string name="cats_wait_next_fact">Please wait loading .. </string>
+    <string name="cats_next_activity">Next Activity</string>
 </resources>

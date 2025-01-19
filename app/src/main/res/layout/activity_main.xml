@@ -7,6 +7,16 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/iv_fact"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/fact_textView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+
     <TextView
         android:id="@+id/fact_textView"
         android:textColor="@color/black"
@@ -28,3 +38,5 @@
         app:layout_constraintTop_toBottomOf="@+id/fact_textView" />
 
 </otus.homework.coroutines.CatsView>
+
+
