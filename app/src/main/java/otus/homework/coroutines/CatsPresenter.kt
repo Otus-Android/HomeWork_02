@@ -11,17 +11,23 @@ import kotlinx.coroutines.withContext
 import java.net.SocketTimeoutException
 import kotlin.coroutines.cancellation.CancellationException
 
+interface ICatsPresenter {
+    fun onInitComplete()
+    fun attachView(catsView: ICatsView)
+    fun detachView()
+}
+
 class CatsPresenter(
     private val catsService: CatsService,
     private val catImageService: CatImageService,
-) {
+): ICatsPresenter {
 
     private var _catsView: ICatsView? = null
     private val presenterScope = PresenterScope(CoroutineName("CatsCoroutine"))
     private var workJob: Job? = null
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun onInitComplete() {
+    override fun onInitComplete() {
         if (workJob?.isActive == true) {
             _catsView?.handle(R.string.cats_wait_next_fact)
             return
@@ -54,11 +60,11 @@ class CatsPresenter(
         }
     }
 
-    fun attachView(catsView: ICatsView) {
+    override fun attachView(catsView: ICatsView) {
         _catsView = catsView
     }
 
-    fun detachView() {
+    override fun detachView() {
         _catsView = null
         CrashMonitor.trackWarning("Stop detachView")
         presenterScope.cancel()
