@@ -6,6 +6,7 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.SocketTimeoutException
@@ -61,7 +62,6 @@ class CatsViewModel(
 
     override fun detachView() {
         _catsView = null
-        workJob?.cancel()
-        workJob = null
+        viewModelScope.cancel()
     }
 }
