@@ -41,12 +41,10 @@ class CatsPresenter(
                     val imageDeferred = async {
                         catImageService.getRandomImages()
                     }
-                    factDeferred.await()
-                    imageDeferred.await()
                     withContext(Dispatchers.Main) {
                         _catsView?.populate(
-                            factDeferred.getCompleted(),
-                            imageDeferred.getCompleted()
+                            factDeferred.await(),
+                            imageDeferred.await()
                         )
                     }
                 }
