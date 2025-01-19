@@ -1,28 +1,41 @@
 package otus.homework.coroutines
 
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.SocketTimeoutException
+import kotlin.coroutines.cancellation.CancellationException
 
 class CatsPresenter(
     private val catsService: CatsService
 ) {
 
     private var _catsView: ICatsView? = null
+    private val presenterScope = PresenterScope(CoroutineName("CatsCoroutine"))
+    private var workJob: Job? = null
 
     fun onInitComplete() {
-        catsService.getCatFact().enqueue(object : Callback<Fact> {
-
-            override fun onResponse(call: Call<Fact>, response: Response<Fact>) {
-                if (response.isSuccessful && response.body() != null) {
-                    _catsView?.populate(response.body()!!)
+        if (workJob?.isActive == true) {
+            _catsView?.handle(R.string.cats_wait_next_fact)
+            return
+        }
+        workJob = presenterScope.launch {
+            try {
+                val fact = withContext(Dispatchers.IO) {
+                    catsService.getCatFact()
                 }
+                _catsView?.populate(fact)
+            } catch (timeOutException: SocketTimeoutException) {
+                _catsView?.handle(R.string.app_request_timeout)
+            } catch (_: CancellationException) {
+            } catch (t: Throwable) {
+                CrashMonitor.trackError(t)
+                _catsView?.handle(t.message.toString())
             }
-
-            override fun onFailure(call: Call<Fact>, t: Throwable) {
-                CrashMonitor.trackWarning()
-            }
-        })
+        }
     }
 
     fun attachView(catsView: ICatsView) {
@@ -31,5 +44,7 @@ class CatsPresenter(
 
     fun detachView() {
         _catsView = null
+        CrashMonitor.trackWarning("Stop detachView")
+        presenterScope.cancel()
     }
 }
