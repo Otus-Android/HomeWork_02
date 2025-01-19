@@ -26,7 +26,6 @@ class CatsPresenter(
     private val presenterScope = PresenterScope(CoroutineName("CatsCoroutine"))
     private var workJob: Job? = null
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     override fun onInitComplete() {
         if (workJob?.isActive == true) {
             _catsView?.handle(R.string.cats_wait_next_fact)
