@@ -16,7 +16,7 @@ class CatsViewModel(
     private val imageService: ImageService,
     private val showToast: (String) -> Unit
 ) : ViewModel() {
-    private val _state = MutableStateFlow(Model.EMPTY_MODEL)
+    private val _state: MutableStateFlow<Result> = MutableStateFlow(Result.Success(Model.EMPTY_MODEL))
     val state = _state.asStateFlow()
 
     private val coroutineExceptionHandler =
@@ -25,6 +25,7 @@ class CatsViewModel(
                 (coroutineContext[CoroutineName]?.name + throwable.message)
             )
             showToast.invoke(throwable.message.toString())
+            _state.value = Result.Error(throwable.message.toString())
         }
 
     fun getContent() {
@@ -37,7 +38,7 @@ class CatsViewModel(
             val fact = factDeferred.await()
             val image = imageDeferred.await()
 
-            _state.value = Model(fact = fact, imageUrl = image.url)
+            _state.value = Result.Success(Model(fact = fact, imageUrl = image.url))
         }
     }
 }
@@ -54,7 +55,7 @@ class ViewModelFactory(
     ): T = CatsViewModel(catsService, imageService, showToast) as T
 }
 
-//sealed class Result {
-//    data class Success<T>(val data: T) : Result()
-//    data class Error(val msg: String) : Result()
-//}
+sealed class Result {
+    data class Success<T>(val data: T) : Result()
+    data class Error(val msg: String) : Result()
+}

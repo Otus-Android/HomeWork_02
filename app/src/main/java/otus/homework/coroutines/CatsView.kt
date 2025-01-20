@@ -30,16 +30,23 @@ class CatsView @JvmOverloads constructor(
         this.catsViewModel = catsViewModel
 
         viewScope.launch {
-            catsViewModel.state.collectLatest { model ->
-                if (model != Model.EMPTY_MODEL) {
-                    imageView?.let {
-                        Picasso.get()
-                            .load(model.imageUrl)
-                            .into(it)
+            catsViewModel.state.collectLatest { result ->
+                when (result) {
+                    is Result.Success<*> -> {
+                        if (result.data is Model) {
+                            if (result.data != Model.EMPTY_MODEL) {
+                                imageView?.let {
+                                    Picasso.get()
+                                        .load(result.data.imageUrl)
+                                        .into(it)
+                                }
+                                textView?.let {
+                                    it.text = result.data.fact.fact
+                                }
+                            }
+                        }
                     }
-                    textView?.let {
-                        it.text = model.fact.fact
-                    }
+                    is Result.Error -> { }
                 }
             }
         }
