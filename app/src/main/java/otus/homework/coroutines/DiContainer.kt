@@ -12,14 +12,23 @@ import java.util.concurrent.Executors
 
 class DiContainer(private val lifecycle: Lifecycle) {
 
-    private val retrofit by lazy {
+    private val catsRetrofit by lazy {
         Retrofit.Builder()
             .baseUrl("https://catfact.ninja/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
 
-    val service: CatsService by lazy { retrofit.create(CatsService::class.java) }
+    private val imageRetrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://api.thecatapi.com/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    val catsService: CatsService by lazy { catsRetrofit.create(CatsService::class.java) }
+
+    val imageService: ImageService by lazy { imageRetrofit.create(ImageService::class.java) }
 
     val presenterScope by lazy {
         val mainDispatcher = Executors

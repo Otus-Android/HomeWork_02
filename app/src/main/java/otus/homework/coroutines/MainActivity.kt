@@ -5,7 +5,9 @@ import android.os.Bundle
 import androidx.lifecycle.coroutineScope
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.job
@@ -25,7 +27,11 @@ class MainActivity : AppCompatActivity() {
         val view = layoutInflater.inflate(R.layout.activity_main, null) as CatsView
         setContentView(view)
 
-        catsPresenter = CatsPresenter(diContainer.service, diContainer.presenterScope)
+        catsPresenter = CatsPresenter(
+            diContainer.catsService,
+            diContainer.imageService,
+            diContainer.presenterScope
+        )
         view.presenter = catsPresenter
         catsPresenter.attachView(view)
         catsPresenter.onInitComplete()
@@ -35,6 +41,7 @@ class MainActivity : AppCompatActivity() {
         if (isFinishing) {
             catsPresenter.cancelJob()
             catsPresenter.detachView()
+            diContainer.presenterScope.coroutineContext.job.cancel("job cancel by activity's onStop()")
         }
         super.onStop()
     }
