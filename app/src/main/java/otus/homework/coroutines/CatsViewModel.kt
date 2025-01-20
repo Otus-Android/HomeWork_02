@@ -1,21 +1,25 @@
 package otus.homework.coroutines
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.net.SocketTimeoutException
 
 
-class CatsPresenter(
+class CatsViewModel(
     private val catsService: CatsService,
-    private val imageService: ImageService,
-    private val presenterScope: CoroutineScope
-) {
-    private var _catsView: ICatsView? = null
+    private val imageService: ImageService
+) : ViewModel() {
+
+    private val _state = MutableStateFlow<Result>(Result.Initialization)
+    val state = _state.asStateFlow()
+
     private var job: Job? = null
 
     private val exceptionHandler by lazy {
@@ -31,7 +35,7 @@ class CatsPresenter(
 
     fun onInitComplete() {
         job?.cancel()
-        job = presenterScope.launch(exceptionHandler) {
+        job = viewModelScope.launch(exceptionHandler) {
             val factDeferred = async { catsService.getCatFact().body()?.fact }
             val imageDeferred = async { imageService.getImage().body()?.getOrNull(0)?.url }
 
@@ -39,33 +43,27 @@ class CatsPresenter(
             val image = imageDeferred.await()
 
             if (!fact.isNullOrEmpty() && !image.isNullOrEmpty()) {
-                withContext(Dispatchers.Main) {
-                    _catsView?.populate(
-                        DataModel(
-                            fact.toString(),
-                            image
-                        )
-                    )
-                }
+                _state.emit(Result.Success(DataModel(fact.toString(), image)))
             }
         }
     }
 
     private fun showToast(text: String) {
-        presenterScope.launch(Dispatchers.Main) {
-            _catsView?.showToast(text)
+        viewModelScope.launch {
+            _state.emit(Result.Error(text))
         }
     }
 
-    fun attachView(catsView: ICatsView) {
-        _catsView = catsView
-    }
-
-    fun detachView() {
-        _catsView = null
-    }
-
-    fun cancelJob() {
-        job?.cancel()
+    class CatsViewModelFactory(
+        private val catsService: CatsService,
+        private val imageService: ImageService
+    ) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(CatsViewModel::class.java)) {
+                @Suppress("UNCHECKED_CAST")
+                return CatsViewModel(catsService, imageService) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
+        }
     }
 }
