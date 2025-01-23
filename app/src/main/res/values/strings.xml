@@ -2,4 +2,5 @@
     <string name="app_name">Cat Facts </string>
     <string name="more_facts">More Facts</string>
     <string name="could_not_get_response_from_server">Не удалось получить ответ от сервера</string>
+    <string name="cat">Cat</string>
 </resources>
