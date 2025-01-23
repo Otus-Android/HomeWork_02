@@ -48,8 +48,12 @@ class CatsViewModel(
                 }
                 withContext(Dispatchers.Main) {
                     _catsView?.populate(
-                        factDeferred.await(),
-                        imageDeferred.await()
+                        Result.Success(
+                            CatData(
+                                factDeferred.await(),
+                                imageDeferred.await()
+                            )
+                        )
                     )
                 }
             }
