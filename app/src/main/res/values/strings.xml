@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">Cat Facts </string>
+    <string name="app_unknown_error">"Что-то пошло не так"</string>
+    <string name="app_request_timeout">"Не удалось получить ответ от сервером"</string>
     <string name="more_facts">More Facts</string>
+    <string name="cats_wait_next_fact">"Подождите немного. Идет получение нового факта"</string>
+    <string name="cats_next_activity">"Next Activity"</string>
 </resources>
