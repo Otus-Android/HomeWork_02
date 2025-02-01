@@ -1,28 +1,35 @@
 package otus.homework.coroutines
 
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import otus.homework.coroutines.dto.CatImage
+
 
 class CatsPresenter(
-    private val catsService: CatsService
-) {
+    private val catsFactService: CatsFactService,
+    private val catsImagesService: CatsImageService
+): CatLoader {
 
     private var _catsView: ICatsView? = null
 
-    fun onInitComplete() {
-        catsService.getCatFact().enqueue(object : Callback<Fact> {
+    override fun onInitComplete() {
 
-            override fun onResponse(call: Call<Fact>, response: Response<Fact>) {
-                if (response.isSuccessful && response.body() != null) {
-                    _catsView?.populate(response.body()!!)
+        PresenterScope.launch {
+            try {
+
+                val catFact = async { catsFactService.getCatFact() }.await()
+
+                val catImage: List<CatImage> = async { catsImagesService.getCatImage() }.await()
+
+                _catsView?.populate(catFact, catImage.first())
+            } catch (ex: Exception) {
+                if (ex is java.net.SocketTimeoutException) {
+                    _catsView?.onError("Unable to get response from server")
                 }
+                CrashMonitor.trackWarning(ex.message!!)
             }
+        }
 
-            override fun onFailure(call: Call<Fact>, t: Throwable) {
-                CrashMonitor.trackWarning()
-            }
-        })
     }
 
     fun attachView(catsView: ICatsView) {
