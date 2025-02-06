@@ -1,15 +1,15 @@
 package otus.homework.coroutines
 
-import kotlinx.coroutines.CoroutineScope
+import android.content.Context
+import android.widget.Toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import java.net.SocketTimeoutException
 
 class CatsPresenter(
-    private val catsService: CatsService
+    private val catsService: CatsService,
+    private val context: Context // Для показа Toast
 ) {
 
     private var _catsView: ICatsView? = null
@@ -25,23 +25,19 @@ class CatsPresenter(
                 // Добавляем факт
                 _catsView?.populate(fact)
             } catch (e: Exception) {
-                // Обрабатываем ошибку, если необходимо
-                CrashMonitor.trackWarning()
-
+                when (e) {
+                    is SocketTimeoutException -> {
+                        // Показываем Toast для таймаута
+                        Toast.makeText(context, "Не удалось получить ответ от сервером", Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                        // Логируем исключение и показываем сообщение для остальных случаев
+                        CrashMonitor.trackWarning(e)
+                        Toast.makeText(context, e.message ?: "Произошла ошибка", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         }
-//        catsService.getCatFact()(object : Callback<Fact> {
-//
-//            override fun onResponse(call: Call<Fact>, response: Response<Fact>) {
-//                if (response.isSuccessful && response.body() != null) {
-//                    _catsView?.populate(response.body()!!)
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<Fact>, t: Throwable) {
-//                CrashMonitor.trackWarning()
-//            }
-//        })
     }
 
     fun attachView(catsView: ICatsView) {
@@ -50,6 +46,6 @@ class CatsPresenter(
 
     fun detachView() {
         _catsView = null
-        presenterScope.clear()
+
     }
 }
