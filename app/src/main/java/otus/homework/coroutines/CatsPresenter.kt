@@ -46,6 +46,7 @@ class CatsPresenter(
 
     fun detachView() {
         _catsView = null
+        presenterScope.clear()
 
     }
 }
