@@ -5,12 +5,21 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class DiContainer {
 
-    private val retrofit by lazy {
+    private val retrofitCatFacts by lazy {
         Retrofit.Builder()
             .baseUrl("https://catfact.ninja/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
 
-    val service by lazy { retrofit.create(CatsService::class.java) }
+    val catFactsService by lazy { retrofitCatFacts.create(CatsService::class.java) }
+
+    private val retrofitCatImagesSource by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://api.thecatapi.com/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    val catImagesSourceService by lazy { retrofitCatImagesSource.create(CatImagesService::class.java) }
 }

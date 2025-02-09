@@ -1,30 +1,38 @@
 package otus.homework.coroutines
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var catsPresenter: CatsPresenter
-
     private val diContainer = DiContainer()
+    private lateinit var catsView: CatsView
+    private lateinit var viewModel: CatsViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val view = layoutInflater.inflate(R.layout.activity_main, null) as CatsView
-        setContentView(view)
+        catsView = layoutInflater.inflate(R.layout.activity_main, null) as CatsView
+        setContentView(catsView)
 
-        catsPresenter = CatsPresenter(diContainer.service)
-        view.presenter = catsPresenter
-        catsPresenter.attachView(view)
-        catsPresenter.onInitComplete()
+        viewModel = CatsViewModel(diContainer.catFactsService, diContainer.catImagesSourceService)
+        catsView.setViewModel(viewModel)
     }
 
-    override fun onStop() {
-        if (isFinishing) {
-            catsPresenter.detachView()
+    override fun onResume() {
+        super.onResume()
+        fetchCatData()
+    }
+
+    private fun fetchCatData() {
+        viewModel.fetchCatData { result ->
+            when (result) {
+                is Result.Success -> catsView.populate(result.data)
+                is Result.Error -> {
+                    Toast.makeText(this, result.message, Toast.LENGTH_SHORT).show()
+                }
+            }
         }
-        super.onStop()
     }
 }
