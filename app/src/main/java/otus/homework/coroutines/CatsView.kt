@@ -24,7 +24,6 @@ class CatsView @JvmOverloads constructor(
                 when (result) {
                     is Result.Success -> populate(result.data)
                     is Result.Error -> {
-                        // Обработка ошибок, например, через Toast или Snackbar
                         Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
                     }
                 }

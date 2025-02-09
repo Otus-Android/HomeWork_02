@@ -30,7 +30,6 @@ class MainActivity : AppCompatActivity() {
             when (result) {
                 is Result.Success -> catsView.populate(result.data)
                 is Result.Error -> {
-                    // Обработка ошибок, например, через Toast или Snackbar
                     Toast.makeText(this, result.message, Toast.LENGTH_SHORT).show()
                 }
             }

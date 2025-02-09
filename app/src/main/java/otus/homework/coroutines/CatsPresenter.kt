@@ -11,7 +11,7 @@ import java.net.SocketTimeoutException
 class CatsPresenter(
     private val catsService: CatsService,
     private val catImagesService: CatImagesService,
-    private val context: Context // Для показа Toast
+    private val context: Context
 ) {
 
 
