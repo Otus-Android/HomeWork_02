@@ -24,23 +24,20 @@ class CatsView @JvmOverloads constructor(
         }
     }
 
-    override fun populate(fact: Fact) {
-        findViewById<TextView>(R.id.fact_textView).text = fact.fact
+    override fun populate(catModel: CatPresentationModel) {
+        findViewById<TextView>(R.id.fact_textView).text = catModel.fact
+        showCatImage(catModel.imageUrl)
     }
 
-    override fun showCatImage(imageUrl: String) {
+    private fun showCatImage(imageUrl: String) {
         val imageView: ImageView = findViewById(R.id.cat_fact_imageView)
-        Log.i("debug", "url = $imageUrl")
-        // Загружаем изображение с помощью Picasso
-        Picasso.get()
-            .load(imageUrl)
-            .into(imageView)
+        Picasso.get().load(imageUrl).into(imageView)
     }
+
 
 
 }
 
 interface ICatsView {
-    fun populate(fact: Fact)
-    fun showCatImage(imageUrl: String)
+    fun populate(catModel: CatPresentationModel)
 }
