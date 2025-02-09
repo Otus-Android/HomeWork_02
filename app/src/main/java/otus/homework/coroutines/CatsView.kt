@@ -2,10 +2,10 @@ package otus.homework.coroutines
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.squareup.picasso.Picasso
 
@@ -13,18 +13,30 @@ class CatsView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : ConstraintLayout(context, attrs, defStyleAttr), ICatsView {
+) : ConstraintLayout(context, attrs, defStyleAttr) {
 
-    var presenter :CatsPresenter? = null
+    private lateinit var viewModel: CatsViewModel
 
     override fun onFinishInflate() {
         super.onFinishInflate()
         findViewById<Button>(R.id.button).setOnClickListener {
-            presenter?.onInitComplete()
+            viewModel.fetchCatData { result ->
+                when (result) {
+                    is Result.Success -> populate(result.data)
+                    is Result.Error -> {
+                        // Обработка ошибок, например, через Toast или Snackbar
+                        Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
         }
     }
 
-    override fun populate(catModel: CatPresentationModel) {
+    fun setViewModel(catsViewModel: CatsViewModel) {
+        this.viewModel = catsViewModel
+    }
+
+    fun populate(catModel: CatPresentationModel) {
         findViewById<TextView>(R.id.fact_textView).text = catModel.fact
         showCatImage(catModel.imageUrl)
     }
@@ -33,11 +45,4 @@ class CatsView @JvmOverloads constructor(
         val imageView: ImageView = findViewById(R.id.cat_fact_imageView)
         Picasso.get().load(imageUrl).into(imageView)
     }
-
-
-
-}
-
-interface ICatsView {
-    fun populate(catModel: CatPresentationModel)
 }
